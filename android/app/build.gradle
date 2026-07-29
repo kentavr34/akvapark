@@ -1,0 +1,93 @@
+plugins {
+    id 'com.android.application'
+}
+
+/* Номер сборки берём из общего version.json — чтобы приложение, сайт и
+   репозиторий всегда говорили об одной и той же версии игры. */
+def gameVersion = { ->
+    def f = file("${rootDir}/../version.json")
+    if (!f.exists()) return [name: '1.0.0', code: 1]
+    def t = f.getText('UTF-8')
+    def n = (t =~ /"version"\s*:\s*"([^"]+)"/)
+    def c = (t =~ /"build"\s*:\s*(\d+)/)
+    return [name: n ? n[0][1] : '1.0.0', code: c ? (c[0][1] as int) : 1]
+}()
+
+android {
+    namespace 'io.akvapark.game'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "io.akvapark.game"
+        minSdk 24
+        targetSdk 34
+        versionCode gameVersion.code
+        versionName gameVersion.name
+
+        buildConfigField "String", "UPDATE_BASE", "\"https://akvapark.45.67.216.36.sslip.io/\""
+        buildConfigField "int",    "GAME_BUILD",  "${gameVersion.code}"
+    }
+
+    signingConfigs {
+        release {
+            // Ключ создаётся один раз скриптом server/build-apk.sh и живёт вне репозитория:
+            // потеряешь его — обновление поверх установленной игры перестанет ставиться.
+            def props = new Properties()
+            def f = file("${rootDir}/keystore.properties")
+            if (f.exists()) {
+                props.load(new FileInputStream(f))
+                storeFile file(props['storeFile'])
+                storePassword props['storePassword']
+                keyAlias props['keyAlias']
+                keyPassword props['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig file("${rootDir}/keystore.properties").exists() ? signingConfigs.release : null
+        }
+        debug {
+            applicationIdSuffix ".debug"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    packagingOptions {
+        resources.excludes += ['META-INF/*']
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
+
+/* Игра — один файл. Кладём его в assets перед сборкой, чтобы приложение
+   запускалось и работало даже при первом запуске без интернета. */
+tasks.register('copyGame', Copy) {
+    from("${rootDir}/..") {
+        include 'index.html'
+        include 'version.json'
+    }
+    into layout.buildDirectory.dir('generated/game')
+}
+android.sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('generated/game-assets')
+
+tasks.register('stageGameAssets', Copy) {
+    dependsOn 'copyGame'
+    from layout.buildDirectory.dir('generated/game')
+    into layout.buildDirectory.dir('generated/game-assets/game')
+}
+
+tasks.configureEach { t ->
+    if (t.name.startsWith('merge') && t.name.endsWith('Assets')) {
+        t.dependsOn 'stageGameAssets'
+    }
+}

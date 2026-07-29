@@ -120,7 +120,21 @@ const out = [
   ['icons/icon-512.png', 512, false],
   ['icons/icon-maskable-512.png', 512, true]
 ];
+
+/* иконки приложения Android: круглая/квадратная маска накладывается системой,
+   поэтому кладём вариант с запасом по краям (maskable) */
+const RES = join('android', 'app', 'src', 'main', 'res');
+for (const [dir, size] of [
+  ['mipmap-mdpi', 108], ['mipmap-hdpi', 162], ['mipmap-xhdpi', 216],
+  ['mipmap-xxhdpi', 324], ['mipmap-xxxhdpi', 432]
+]) {
+  out.push([join(RES, dir, 'ic_launcher_foreground.png'), size, true]);
+  out.push([join(RES, dir, 'ic_launcher.png'), Math.round(size * 0.44), false]);
+}
+
 for (const [f, s, m] of out) {
-  writeFileSync(join(ROOT, f), draw(s, m));
+  const p = join(ROOT, f);
+  mkdirSync(dirname(p), { recursive: true });
+  writeFileSync(p, draw(s, m));
   console.log('ok', f, s + 'x' + s);
 }

@@ -4283,7 +4283,7 @@ requestAnimationFrame(frame);
   function state(s, color){ if(vState){ vState.textContent = s; vState.style.color = color || '#7fd8ff'; } }
 
   /* --- регистрация service worker: офлайн + мгновенный старт --- */
-  if (isWeb && 'serviceWorker' in navigator && window.isSecureContext) {
+  if (isWeb && typeof AkvaNative === 'undefined' && 'serviceWorker' in navigator && window.isSecureContext) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js', { scope: './' })
         .then(reg => { setInterval(() => reg.update().catch(()=>{}), 10 * 60 * 1000); })
@@ -4356,13 +4356,33 @@ requestAnimationFrame(frame);
   } catch(_){}
   if (window.__akvaNoAuto) { tryAuto = function(){}; }
 
-  if (isWeb) {
+  if (isWeb && typeof AkvaNative === 'undefined') {
     setTimeout(check, 4000);
     setInterval(check, POLL_MS);
     window.addEventListener('online', () => setTimeout(check, 1500));
     document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
-  } else {
+  } else if (!isWeb) {
     state('локальный файл', '#9fb4b8');
+  }
+
+  /* --- Android-приложение --- */
+  const native = (typeof AkvaNative !== 'undefined');
+  if (native) {
+    /* В приложении обновление качает сама программа: она умеет проверить файл
+       целиком до подмены. Страница только показывает баннер и перезапускает. */
+    state('приложение', '#7fd8ff');
+    if (btn) btn.textContent = 'ПЕРЕЗАПУСТИТЬ';
+  }
+
+  function nativeUpdateReady(build, version){
+    if (!bar) return;
+    pending = { build, version };
+    txt.innerHTML = 'Игра обновлена до <b>' + (version || build) + '</b><br>Нужен перезапуск';
+    bar.classList.add('show');
+    state('обновлено, нужен перезапуск', '#ffd97a');
+    const restart = () => { try { AkvaNative.restart(); } catch(_) { location.reload(); } };
+    if (btn) btn.onclick = restart;
+    const t = setInterval(() => { if (safeNow()) { clearInterval(t); restart(); } }, 4000);
   }
 
   /* Мост для Android-обёртки: приложение может спросить версию и попросить обновиться. */
@@ -4370,7 +4390,9 @@ requestAnimationFrame(frame);
     build: AKVA_BUILD,
     version: AKVA_VERSION,
     checkUpdate: check,
-    applyUpdate: apply
+    applyUpdate: apply,
+    nativeUpdateReady: nativeUpdateReady,
+    isNative: native
   };
 })();
 </script>
