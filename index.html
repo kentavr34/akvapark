@@ -368,6 +368,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="mbtn pe" id="bPart2b">ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ</div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
     <div id="hint">Телефон: левая половина экрана — идти (джойстик появится под пальцем), правая — крутить камеру.<br>Компьютер: WASD, мышь, Shift — бег, C — присесть, Пробел — прыжок, E — взять.</div>
+    <a id="apkbtn" class="mbtn ghost pe" href="./akvapark.apk" style="display:none">СКАЧАТЬ ДЛЯ ANDROID</a>
     <div id="verline">версия <span id="verNum">—</span> <span id="verState"></span></div>
   </div>
 
@@ -5173,8 +5174,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 2;                 /* bump: build */
-  const AKVA_VERSION = '1.1.0';         /* bump: version */
+  const AKVA_BUILD = 3;                 /* bump: build */
+  const AKVA_VERSION = '1.1.1';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
@@ -5246,6 +5247,22 @@ requestAnimationFrame(frame);
   }
 
   if (btn) btn.addEventListener('click', apply);
+
+  /* Кнопка «скачать apk» — только там, где она уместна: в браузере и когда
+     файл на сервере действительно есть. */
+  (async function offerApk(){
+    if (!isWeb || typeof AkvaNative !== 'undefined') return;
+    const a = el('apkbtn');
+    if (!a) return;
+    try {
+      const r = await fetch('./apk.json?ts=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const j = await r.json();
+      a.textContent = 'СКАЧАТЬ ДЛЯ ANDROID · ' + (j.version || '') +
+                      ' · ' + Math.round((j.size || 0) / 1048576) + ' МБ';
+      a.style.display = '';
+    } catch (_) {}
+  })();
 
   /* Защита от петли перезагрузок: если после обновления сборка та же — больше не
      дёргаем страницу, просто оставляем кнопку игроку. */

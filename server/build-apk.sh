@@ -19,7 +19,10 @@ CMDLINE_VER=11076708           # cmdline-tools 12.0
 BUILD_TOOLS=34.0.0
 PLATFORM=android-34
 
-mkdir -p "$TOOLS" "$DIST"
+mkdir -p "$TOOLS" "$DIST" "$BASE/logs"
+# журнал сборки — рядом с журналом выкладки, чтобы не лазить в journalctl
+exec > >(tee -a "$BASE/logs/apk-build.log") 2>&1
+echo "=== сборка $(date '+%F %T') ==="
 export JAVA_HOME=${JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}
 export ANDROID_HOME=$SDK
 export ANDROID_SDK_ROOT=$SDK
