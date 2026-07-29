@@ -584,10 +584,11 @@ const PROGRESS=(function(){
       // дозаполняем, чтобы не терять уже пройденные главы игрока
       if(!d.owned) d.owned={};
       if(!d.equipped) d.equipped={};
+      if(!d.lore) d.lore={};
       return d;
     }catch(_){ return fresh(); }
   }
-  function fresh(){ return {v:1,done:{},best:{},bank:0,owned:{},equipped:{}}; }
+  function fresh(){ return {v:1,done:{},best:{},bank:0,owned:{},equipped:{},lore:{}}; }
   function save(){
     try{ localStorage.setItem(KEY,JSON.stringify(data)); }catch(_){}
   }
@@ -626,7 +627,15 @@ const PROGRESS=(function(){
   function equip(cat,id){ data.equipped[cat]=id; save(); }
   function equipped(cat,fallback){ return data.equipped[cat]||fallback; }
 
-  return {CHAPTERS,isDone,isUnlocked,stars,complete,addCoins,bank,owns,buy,equip,equipped};
+  /* ---- жетоны/находки (см. движок addLoreToken в игровом коде) ----
+     Найденный жетон не пропадает и не появляется заново при повторном
+     заходе на уровень — это «альбом», а не расходник. */
+  function hasLore(id){ return !!data.lore[id]; }
+  function foundLore(id){ if(data.lore[id]) return false; data.lore[id]=true; save(); return true; }
+  function loreFound(){ return Object.keys(data.lore); }
+
+  return {CHAPTERS,isDone,isUnlocked,stars,complete,addCoins,bank,owns,buy,equip,equipped,
+          hasLore,foundLore,loreFound};
 })();
 
 const SENS = [0.0040,0.0055,0.0075,0.0105];
@@ -1845,6 +1854,44 @@ function addInter(x,y,z,r,label,fn,cond){
 }
 
 /* ==========================================================================
+   ДВИЖОК «КОЛЛЕКЦИОНКА» (см. docs/MASTERPLAN.md, п.4)
+   Жетоны/находки-лор: в отличие от addPickup() они не идут в рюкзак (не
+   расходуются, не занимают полосу предметов) — это альбом на всю игру,
+   хранится в PROGRESS и переживает перезапуск уровня. Найденный жетон
+   просто не появляется повторно — addLoreToken() сам это проверяет.
+
+   addLoreToken(x,y,z,{id,name,text}) — id должен быть уникален на игру,
+   name показывается в подсказке и тосте, text (необязательно) — короткая
+   реплика героя при находке (двигает лор без кат-сцены). */
+function addLoreToken(x,y,z,opt){
+  if(PROGRESS.hasLore(opt.id)) return null;
+  const g=new THREE.Group();
+  const disk=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.05,14),
+    new THREE.MeshBasicMaterial({color:0xffd97a}));
+  disk.rotation.x=Math.PI/2; g.add(disk);
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.025,6,14),
+    new THREE.MeshBasicMaterial({color:0xfff3c0}));
+  rim.rotation.x=Math.PI/2; g.add(rim);
+  const halo=new THREE.Mesh(new THREE.SphereGeometry(0.4,10,8),
+    new THREE.MeshBasicMaterial({color:0xfff3c0,transparent:true,opacity:0.16}));
+  g.add(halo);
+  g.position.set(x,y,z); world.add(g);
+  const p={mesh:g,kind:'lore',data:opt,base:y,alive:true,phase:Math.random()*6.28};
+  pickups.push(p);
+  interactives.push({
+    pos:new THREE.Vector3(x,y,z), r:2.0, label:'Жетон: '+(opt.name||'находка'),
+    alive:()=>p.alive,
+    fn(){
+      p.alive=false; g.visible=false; SND.pick();
+      PROGRESS.foundLore(opt.id);
+      toast((opt.name||'Жетон')+' — в альбоме '+PROGRESS.loreFound().length);
+      if(opt.text) say(opt.text);
+    }
+  });
+  return p;
+}
+
+/* ==========================================================================
    ЖИВОЙ МИР
    Мелочи, из-за которых уровень перестаёт быть пустым, и общая динамика:
    один ветер качает всю траву и провода разом, вода дышит и бросает блики
@@ -2994,6 +3041,40 @@ function spawnBeasts(){
   G.beastTotal=beasts.length; G.caught=0;
 }
 
+/* ==========================================================================
+   ДВИЖОК «СПАСЕНИЕ» (см. docs/MASTERPLAN.md, п.4 — библиотека квестов)
+   Оглушить мечом → поймать сачком («ВЗЯТЬ») → засчитать. Механика уже была
+   полностью общей внутри самой игры (makeBeast/updBeasts/swordSwing/doUse
+   не завязаны на уровень 1) — не хватало только способа добавить существо
+   НЕ через жёсткий список BEAST_CFG, чтобы новые акты могли расставлять
+   такие квесты по своим координатам без правки этого файла.
+
+   addRescueBeast({
+     name, color, area:[x0,x1,z0,z1], start:[x,z], path:[[x,z],...],
+     dmg, spPatrol, spChase,           // необязательные — есть разумные default
+     onCaught(beast)                    // необязательный колбэк сверх +10 монет
+   }) -> сам объект существа (beast), можно дальше следить/удалить вручную.
+
+   Считается в общей копилке beastTotal/caught наравне с остальными —
+   поэтому вызывать до того, как игрок мог начать ловить (в начале сцены),
+   и не вызывать для существ, что уже часть основного сюжета уровня. */
+function addRescueBeast(opt){
+  const cfg=Object.assign({
+    id:'rb'+(beasts.length+1)+'_'+Math.random().toString(36).slice(2,7),
+    name:'Существо', color:0x4a3d33, dark:0x241d17, eye:0xffdd55,
+    bw:0.55, bh:0.5, bl:1.2, legL:0.38, y:0.58, rad:0.6,
+    spPatrol:1.5, spChase:4.0, dmg:12
+  },opt);
+  if(!cfg.area) cfg.area=[cfg.start[0]-8,cfg.start[0]+8,cfg.start[1]-8,cfg.start[1]+8];
+  if(!cfg.path) cfg.path=[cfg.start];
+  const b=makeBeast(cfg);
+  if(opt.onCaught) b.onCaught=opt.onCaught;
+  beasts.push(b);
+  G.beastTotal++;
+  renderTasks();
+  return b;
+}
+
 function updBeasts(dt){
   if(G.mode!=='play') return;
   const pp=P.pos;
@@ -3113,7 +3194,12 @@ function catchBeast(b){
   G.caught++; G.coins+=10; SND.net();
   toast('Поймано: '+b.cfg.name+'  (+10 монет)');
   renderTasks(); updHUD();
-  if(G.caught>=G.beastTotal){ nextTask(8); say('Все трое в сачке. Теперь можно и щит включать.'); }
+  if(b.onCaught) b.onCaught(b);
+  // «Все трое в сачке» — реплика для сюжетных троек уровня 1; для побочных
+  // спасений (addRescueBeast) свою реакцию задают через onCaught.
+  if(G.level===1 && G.caught>=G.beastTotal){
+    nextTask(8); say('Все трое в сачке. Теперь можно и щит включать.');
+  }
 }
 
 /* акулий плавник */
@@ -5574,8 +5660,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 7;                 /* bump: build */
-  const AKVA_VERSION = '1.5.0';         /* bump: version */
+  const AKVA_BUILD = 8;                 /* bump: build */
+  const AKVA_VERSION = '1.6.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
