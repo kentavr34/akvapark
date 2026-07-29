@@ -1895,8 +1895,9 @@ const DETAIL=(function(){
   }
   let GRASS_MAT=null;
 
-  function grassPatch(cx,cz,radius,count,hMin,hMax){
+  function grassPatch(cx,cz,radius,count,hMin,hMax,y){
     if(!count) return;
+    y=y||0;                                       // площадка не всегда на нулевой высоте
     if(!GRASS_MAT) GRASS_MAT=grassMaterial();
     const g=new THREE.PlaneGeometry(1,1);
     g.translate(0,0.5,0);                        // корни в нуле — качаем верхушку
@@ -1910,7 +1911,7 @@ const DETAIL=(function(){
       const h=rnd(hMin,hMax), w=h*rnd(0.7,1.15);
       for(let k=0;k<2;k++){                       // два скрещённых полотна — объём
         e.set(0,Math.random()*3.14+k*1.5707,0); q.setFromEuler(e);
-        pos.set(px,0,pz); scl.set(w,h,1);
+        pos.set(px,y,pz); scl.set(w,h,1);
         mtx.compose(pos,q,scl); mesh.setMatrixAt(n++,mtx);
       }
     }
@@ -2154,15 +2155,30 @@ const DETAIL=(function(){
     pos.needsUpdate=true;
   }
 
-  /* ---------- сборка украшений уровня ---------- */
-  function build(level){
+  /* ---------- сборка украшений уровня ----------
+     Уровень 4 живёт несколькими подряд сменяющими друг друга мирами
+     (вертолёт → парк → город), и каждый вызывает clearWorld() перед собой —
+     значит build() для него нужно звать заново на каждую смену сцены,
+     вторым параметром. Остальные уровни строятся один раз при старте. */
+  const DUST_BOX={
+    1:{x0:-26,x1:26,y0:0.3,y1:5.5,z0:-20,z1:36},
+    2:{x0:-15,x1:15,y0:0.3,y1:5.5,z0:-11,z1:16},
+    3:{x0:-30,x1:26,y0:0.3,y1:9,z0:-40,z1:40},
+    heli:{x0:-3,x1:3,y0:0.3,y1:2.4,z0:-4,z1:4},
+    park:{x0:-22,x1:22,y0:0.3,y1:5.5,z0:-22,z1:36},
+    park2:{x0:-22,x1:22,y0:0.3,y1:5.5,z0:-22,z1:36},
+    city:{x0:-40,x1:40,y0:0.3,y1:8,z0:-24,z1:70}
+  };
+  function build(level,scene){
     reset();
     if(level===1) buildL1();
     else if(level===2) buildL2();
+    else if(level===3) buildL3();
+    else if(level===4) buildL4(scene);
     else buildGeneric();
     collectCeilings();
-    // общая пыль и листья над игровой зоной
-    makeDust(QUALITY.dust,{x0:-26,x1:26,y0:0.3,y1:5.5,z0:-20,z1:36});
+    const box=DUST_BOX[level===4?scene:level]||DUST_BOX[1];
+    makeDust(QUALITY.dust,box);
     if(level===1) makeLeaves(Math.floor(QUALITY.dust*0.35),{x0:-20,x1:20,y0:0.5,y1:7,z0:-20,z1:2});
   }
 
@@ -2200,12 +2216,75 @@ const DETAIL=(function(){
     dressWater();
   }
 
+  /* Машинный двор: комната -14..14 x, -10..16 z (стены wallX/wallZ в
+     buildLevel2), ворота на z=16, дальше дорога до z≈285 с камнем на z=240.
+     Машина стоит у (6,2), генератор у (-8,9) — туда декор не кладём, чтобы
+     не лезть в коллайдеры техники. */
   function buildL2(){
-    grassPatch(0,-6,10,Math.floor(QUALITY.grass*0.4),0.2,0.7);
-    litter(-24,24,-24,24,QUALITY.debris,0.02);
-    puddle(-4,2,1.8,0.02); puddle(9,-7,2.2,0.02);
-    for(const c of [[-10,4.4,4],[8,4.4,-3]]) hanging(c[0],c[1],c[2],rnd(1,2),0x23282a,0.03);
+    litter(-13,13,-9,15,Math.floor(QUALITY.debris*0.9),0.02);
+    grassPatch(-13,-8,2.2,Math.floor(QUALITY.grass*0.12),0.2,0.55);   // трава у стен
+    grassPatch(13,10,2.2,Math.floor(QUALITY.grass*0.12),0.2,0.55);
+    grassPatch(-11,-9,1.8,Math.floor(QUALITY.grass*0.08),0.2,0.5);
+    puddle(-3,-6,1.7,0.02); puddle(10,10,1.5,0.02);                   // подальше от машины/генератора
+    pipe(-13.7,5.4,-9,-13.7,15,0.08,M.metal);                         // трубы вдоль стен
+    pipe(13.7,5.4,-9,13.7,15,0.08,M.metal);
+    for(const c of [[-10,4.4,4],[8,4.4,-3],[0,4.6,14]])
+      hanging(c[0],c[1],c[2],rnd(1,2),0x23282a,0.03);
+    // дорога за воротами: одичавшая трава пробивается через плиты и разметку
+    for(let i=0;i<7;i++) grassPatch(rnd(-4,4),25+i*36,rnd(1.5,2.6),
+      Math.floor(QUALITY.grass*0.05),0.2,0.5);
+    grassPatch(0,240,5,Math.floor(QUALITY.grass*0.14),0.25,0.7);      // камень зарос
+    litter(-3,3,20,280,Math.floor(QUALITY.debris*0.3),0.05);
     dressWater();
+  }
+
+  /* Океан: обрыв с дорогой у x≈9,z 15..70 (машина разбита у 4,14), огромная
+     вода вокруг, остров на ISLAND (передаётся явно — DETAIL не знает про
+     игровые константы уровня). Дно и кораллы уже расставлены в
+     buildLevel3() напрямую, тут — то, что касается земли и острова. */
+  function buildL3(){
+    litter(0,20,-6,30,Math.floor(QUALITY.debris*0.5),8.05);           // обломки на дороге обрыва
+    grassPatch(2,-30,3,Math.floor(QUALITY.grass*0.1),0.2,0.5,8.05);
+    grassPatch(18,40,3.5,Math.floor(QUALITY.grass*0.14),0.25,0.6,8.05);
+    if(typeof ISLAND!=='undefined'){
+      // верх острова (мешает купол+обод) реально на y≈2.2 — оттуда и коллайдер
+      const iy=2.22;
+      // пляж — плавник и водоросли, без травы (это песок)
+      litter(ISLAND.x-ISLAND.r,ISLAND.x+ISLAND.r,ISLAND.z-ISLAND.r,ISLAND.z+ISLAND.r,
+        Math.floor(QUALITY.debris*0.6),iy);
+      // трава на дальней от холма стороне (у холма своя лестница-коллайдер — не лезем)
+      grassPatch(ISLAND.x+9,ISLAND.z-9,8,Math.floor(QUALITY.grass*0.3),0.3,0.9,iy);
+    }
+    dressWater();
+  }
+
+  /* Уровень 4 «Спасатель» — три отдельных мира, каждый строится заново
+     через scene4() и вызывает build(4, имяСцены) сам, потому что прежний
+     мир уже стёрт clearWorld(). Координаты — из buildHeliCabin/buildPark4/
+     buildCity. */
+  function buildL4(scene){
+    if(scene==='heli') return;   // кабина вертолёта — чисто и тесно, украшать нечем
+    if(scene==='park'||scene==='park2'){
+      // площадь перед восстановленным парком
+      litter(-21,21,-21,1,Math.floor(QUALITY.debris*0.7),0.02);
+      grassPatch(-18,-14,3,Math.floor(QUALITY.grass*0.14),0.2,0.6);
+      grassPatch(18,-14,3,Math.floor(QUALITY.grass*0.14),0.2,0.6);
+      puddle(-10,-6,1.6,0.02); puddle(12,-4,1.8,0.02);
+      // холл
+      litter(-16,16,3,29,Math.floor(QUALITY.debris*0.8),0.02);
+      puddle(-6,10,1.7,0.02);
+      // раздевалка
+      litter(18,31,8,24,Math.floor(QUALITY.debris*0.4),0.02);
+      // зал с бассейном
+      litter(-23,23,31,71,Math.floor(QUALITY.debris*0.6),0.02);
+      pipe(-10.6,8.6,31,10.6,31,0.08,M.metal);
+      dressWater();
+    } else if(scene==='city'){
+      litter(-38,38,-22,68,Math.floor(QUALITY.debris*0.7),0.02);
+      grassPatch(-30,10,4,Math.floor(QUALITY.grass*0.16),0.25,0.7);
+      grassPatch(30,20,4,Math.floor(QUALITY.grass*0.16),0.25,0.7);
+      puddle(-14,30,2.2,0.02); puddle(16,-4,1.8,0.02);
+    }
   }
 
   function buildGeneric(){
@@ -4527,6 +4606,9 @@ function scene4(name){
     heli2=modelHeli(); heli2.position.set(0,2.2,-16); world.add(heli2);
     P.pos.set(0,0.2,-10); P.yaw=Math.PI; P.pitch=0;
   }
+  // clearWorld() выше уже стёр прошлую сцену и украшения — строим заново
+  // под то, что только что появилось (у каждого имени своя геометрия).
+  DETAIL.build(4,name);
   updateHands(); renderHotbar();
 }
 function fly(txt,then){
@@ -5458,6 +5540,10 @@ P.pos.set(0,0.2,-14);
   setTimeout(()=>{
     try{
       startLevel(L);
+      // уровень 4 — три подряд сменяющих друг друга мира; ?scene=park|city
+      // прыгает сразу к нужному, минуя вертолётную кабину
+      const sc=q.get('scene');
+      if(L===4 && sc && (sc==='park'||sc==='park2'||sc==='city')) scene4(sc);
       // точка съёмки: ?at=x,y,z&yaw=градусы&pitch=градусы — для проверки картинки
       const at=q.get('at');
       if(at){ const p=at.split(',').map(Number); if(p.length===3) P.pos.set(p[0],p[1],p[2]); }
@@ -5488,8 +5574,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 6;                 /* bump: build */
-  const AKVA_VERSION = '1.4.0';         /* bump: version */
+  const AKVA_BUILD = 7;                 /* bump: build */
+  const AKVA_VERSION = '1.5.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
