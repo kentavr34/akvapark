@@ -65,6 +65,10 @@ android {
 }
 
 dependencies {
+    // androidx тянет kotlin-stdlib разных версий, и jdk7/jdk8-обломки старых
+    // версий дублируют классы новой. BOM сводит их к одной версии.
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.9.24')
+
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.webkit:webkit:1.11.0'
 }
