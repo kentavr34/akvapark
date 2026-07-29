@@ -5,7 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/opt/akvapark/repo/server/update.sh
+; через bash, а не напрямую: git может вернуть файлу режим без бита запуска,
+; и служба свалится с 203/EXEC
+ExecStart=/bin/bash /opt/akvapark/repo/server/update.sh
 User=root
 Nice=10
 TimeoutStartSec=300

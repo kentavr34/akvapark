@@ -7,6 +7,14 @@
 # ==========================================================================
 set -euo pipefail
 
+# Этот скрипт обновляет в том числе сам себя, а bash дочитывает файл по ходу
+# выполнения. Если git подменит его на полуслове, дальше выполнится мусор.
+# Поэтому сразу переходим на копию во временном каталоге.
+if [ "${AKVA_SELFCOPY:-}" != "1" ]; then
+  cp -f "$0" /tmp/akva-update-run.sh
+  AKVA_SELFCOPY=1 exec bash /tmp/akva-update-run.sh "$@"
+fi
+
 BASE=/opt/akvapark
 REPO=$BASE/repo
 WWW=$BASE/www
