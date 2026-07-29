@@ -7,6 +7,7 @@ Web Audio. Ни одной картинки и ни одного сторонн�
 
 **Играть:** https://akvapark.45.67.216.36.sslip.io/
 **Android:** https://akvapark.45.67.216.36.sslip.io/akvapark.apk
+**Куда движется игра:** [docs/MASTERPLAN.md](docs/MASTERPLAN.md) — акты, квесты, порядок внедрения
 
 ---
 
