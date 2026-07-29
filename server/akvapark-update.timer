@@ -1,0 +1,11 @@
+[Unit]
+Description=Аквапарк: проверять обновление игры каждую минуту
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Unit=akvapark-update.service
+
+[Install]
+WantedBy=timers.target

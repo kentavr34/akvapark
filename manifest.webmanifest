@@ -1,0 +1,20 @@
+{
+  "name": "Заброшенный аквапарк",
+  "short_name": "Аквапарк",
+  "description": "Приключенческая 3D-игра: заброшенный аквапарк, океан и спасательная миссия.",
+  "id": "/akvapark/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#04121c",
+  "theme_color": "#04121c",
+  "lang": "ru",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

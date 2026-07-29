@@ -1,0 +1,11 @@
+[Unit]
+Description=Аквапарк: подтянуть новую версию игры с GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/akvapark/repo/server/update.sh
+User=root
+Nice=10
+TimeoutStartSec=300
