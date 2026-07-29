@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Аквапарк</string>
+
+    <!-- Связь приложения с сайтом. Нужна, чтобы браузер через
+         getInstalledRelatedApps понял: игра уже установлена, и не предлагал
+         скачать apk повторно. Вторая половина связи — assetlinks.json на сайте,
+         его генерирует server/build-apk.sh по настоящему ключу подписи. -->
+    <string name="asset_statements" translatable="false">
+        [{
+          \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+          \"target\": {
+            \"namespace\": \"web\",
+            \"site\": \"https://akvapark.45.67.216.36.sslip.io\"
+          }
+        }]
+    </string>
 </resources>

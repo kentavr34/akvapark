@@ -18,6 +18,10 @@
         android:usesCleartextTraffic="false"
         android:theme="@style/AkvaTheme">
 
+        <meta-data
+            android:name="asset_statements"
+            android:resource="@string/asset_statements" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

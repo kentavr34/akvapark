@@ -22,7 +22,12 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
 #ui{position:fixed;inset:0;pointer-events:none;z-index:10}
 #ui.cine #stick,#ui.cine #btns,#ui.cine #hotbar,#ui.cine #topbar,
 #ui.cine #cross,#ui.cine #compass,#ui.cine #prompt,#ui.cine #toast,#ui.cine #helm{display:none!important}
-#ui.swim #hotbar,#ui.swim #btns{display:none!important}
+/* Под водой прячем только то, что там бессмысленно (рюкзак, бег, присед,
+   прыжок, фонарь и полосу предметов). Кнопки действия «ВЗЯТЬ» и «УДАР»
+   ОСТАЮТСЯ — ими ловят и оглушают акул; без них уровень было не пройти. */
+#ui.swim #hotbar{display:none!important}
+#ui.swim #bLamp,#ui.swim #bBag,#ui.swim #bCrouch,
+#ui.swim #bRun,#ui.swim #bJump{display:none!important}
 #ui.helm #stick,#ui.helm #hotbar,#ui.helm #btns{display:none!important}
 .pe{pointer-events:auto}
 
@@ -257,6 +262,18 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   .btn.sm{width:42px;height:42px;font-size:7px}
 }
 
+/* ---------- ТЕМНОТА ПО КРАЯМ ----------
+   Виньетка + лёгкая «грязь» кадра. Стоит ноль (один div поверх canvas),
+   а картинка сразу перестаёт быть плоской: взгляд собирается в центр,
+   а без фонаря по углам наступает настоящая темнота. */
+#vig{position:fixed;inset:0;pointer-events:none;z-index:5;
+  background:radial-gradient(ellipse 76% 68% at 50% 48%,
+    rgba(0,0,0,0) 42%, rgba(0,0,0,.28) 74%, rgba(2,8,14,.72) 100%);
+  opacity:0;transition:opacity .8s ease}
+#vig.on{opacity:1}
+#vig.deep{background:radial-gradient(ellipse 62% 56% at 50% 48%,
+    rgba(0,0,0,0) 26%, rgba(0,0,0,.45) 62%, rgba(1,5,9,.93) 100%)}
+
 /* ---------- ВЕРСИЯ И ОБНОВЛЕНИЕ ---------- */
 #verline{margin-top:14px;font-size:10px;letter-spacing:.6px;color:#5f8ea6;opacity:.85}
 #verState{color:#7fd8ff}
@@ -435,6 +452,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   </div>
 </div>
 
+<div id="vig"></div>
 <div id="rotate">Поверни телефон<br>или разверни окно</div>
 
 <div id="updbar"><span id="updtxt">Вышло обновление игры</span><button id="updbtn" class="pe">ОБНОВИТЬ</button></div>
@@ -474,6 +492,7 @@ const QUALITY=(function(){
     get dust(){  return [0,60,140,240][this.tier]; },
     get debris(){return [0,40,90,150][this.tier]; },
     get shadows(){ return this.tier>=3; },
+    get lampShadow(){ return this.tier>=2; },   // тень от фонаря — главный приём света
     get caustics(){ return this.tier>=2; }
   };
 })();
@@ -639,7 +658,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setClearColor(0x0a2434);
 /* Мягкие тени. Потолки специально не отбрасывают тень (см. plane()), иначе
    внутри здания стало бы черно. Слабое железо тени отключает само. */
-renderer.shadowMap.enabled=QUALITY.shadows;
+renderer.shadowMap.enabled=QUALITY.shadows||QUALITY.lampShadow;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.shadowMap.autoUpdate=true;
 const scene=new THREE.Scene();
@@ -661,7 +680,7 @@ const ambLight=new THREE.AmbientLight(0x3a6c8a,0.42); scene.add(ambLight);
 const hemi=new THREE.HemisphereLight(0x6fb6d8,0x142430,0.5); scene.add(hemi);
 const SUN_DIR=new THREE.Vector3(18,46,62);
 const sun=new THREE.DirectionalLight(0xffe0b0,0.85); sun.position.copy(SUN_DIR); scene.add(sun);
-sun.castShadow=true;
+sun.castShadow=QUALITY.shadows;   // солнце светит на весь уровень — дороже фонаря
 sun.shadow.mapSize.set(1024,1024);
 sun.shadow.camera.near=1; sun.shadow.camera.far=180;
 sun.shadow.camera.left=-46; sun.shadow.camera.right=46;
@@ -671,6 +690,18 @@ sun.shadow.normalBias=0.035;
 const lamp=new THREE.SpotLight(0xfff0c0,0,26,0.42,0.55,1.1);
 lamp.position.set(0,0,0); camera.add(lamp);
 const lampTarget=new THREE.Object3D(); lampTarget.position.set(0,0,-1); camera.add(lampTarget); lamp.target=lampTarget;
+/* Тень от фонаря — то, ради чего в таких играх вообще берут фонарь: луч
+   упирается в предметы, за ними ложится темнота, и коридор перестаёт быть
+   равномерно серым. Дорого, поэтому только на сильном железе. */
+if(QUALITY.lampShadow){
+  lamp.castShadow=true;
+  lamp.shadow.mapSize.set(QUALITY.tier>=3?1024:512,QUALITY.tier>=3?1024:512);
+  lamp.shadow.camera.near=0.35;
+  lamp.shadow.camera.far=28;
+  lamp.shadow.bias=-0.0015;
+  lamp.shadow.normalBias=0.03;
+  lamp.shadow.focus=1.0;
+}
 const ceilLights=[];
 /* слабый свет «глаз» — чтобы без фонаря не было полной черноты */
 const eyeLight=new THREE.PointLight(0x9fd0e8,0.55,11,2); camera.add(eyeLight);
@@ -1690,6 +1721,7 @@ const DETAIL=(function(){
     for(const k in items) items[k].length=0;
     dustPts=leafPts=splashPts=null; splashData=[];
     dripPool.length=0;              // меши уже удалены вместе с миром
+    ceilings.length=0;
   }
 
   /* ---------- трава: один меш на сотни пучков, качается в шейдере ---------- */
@@ -1983,6 +2015,7 @@ const DETAIL=(function(){
     if(level===1) buildL1();
     else if(level===2) buildL2();
     else buildGeneric();
+    collectCeilings();
     // общая пыль и листья над игровой зоной
     makeDust(QUALITY.dust,{x0:-26,x1:26,y0:0.3,y1:5.5,z0:-20,z1:36});
     if(level===1) makeLeaves(Math.floor(QUALITY.dust*0.35),{x0:-20,x1:20,y0:0.5,y1:7,z0:-20,z1:2});
@@ -2128,6 +2161,26 @@ const DETAIL=(function(){
     }
   }
 
+  /* Под крышей или под небом. Нужно свету и звуку: в помещении темнота
+     должна быть настоящей, а на улице — нет. Считаем по потолочным плитам,
+     их единицы, так что это просто пара сравнений. */
+  const ceilings=[];
+  function collectCeilings(){
+    ceilings.length=0;
+    world.traverse(o=>{
+      if(!o.isMesh||!o.userData.ceiling) return;
+      const p=o.geometry.parameters; if(!p) return;
+      ceilings.push({x0:o.position.x-p.width/2, x1:o.position.x+p.width/2,
+                     z0:o.position.z-p.height/2, z1:o.position.z+p.height/2,
+                     y:o.position.y});
+    });
+  }
+  function indoor(x,z,y){
+    for(const c of ceilings)
+      if(x>c.x0&&x<c.x1&&z>c.z0&&z<c.z1&&(y===undefined||y<c.y)) return true;
+    return false;
+  }
+
   function setVisible(kind,on){
     if(kind==='dust'&&dustPts) dustPts.visible=on;
     if(kind==='leaves'&&leafPts) leafPts.visible=on;
@@ -2135,7 +2188,7 @@ const DETAIL=(function(){
     if(kind==='grass') items.grass.forEach(g=>g.visible=on);
   }
 
-  return {build,update,reset,splash,drip,grassPatch,puddle,litter,hanging,pipe,shade,setVisible,items};
+  return {build,update,reset,splash,drip,grassPatch,puddle,litter,hanging,pipe,shade,setVisible,indoor,items};
 })();
 
 /* Общее время мира — от него живут ветер, вода и пыль. */
@@ -5024,6 +5077,25 @@ bindTap($('bSens'),()=>{ G.sens=(G.sens+1)%SENS.length;
    ГЛАВНЫЙ ЦИКЛ
    ========================================================================== */
 let last=performance.now(), dripT=0;
+
+/* Состояние камеры: провал при приземлении, дыхание на месте, отставание
+   фонаря от поворота головы. */
+const CAM={dip:0,breath:0,lag:0,lastYaw:Math.PI,lastBob:0,wasGround:true,fallV:0};
+
+/* Темнота по краям кадра. Под крышей и без фонаря — глубокая, на улице —
+   лёгкая. Переключаем классами, чтобы браузер сам плавно свёл переход. */
+const GLOOM={t:0,deep:false,on:false};
+function updateGloom(dt){
+  const v=$('vig'); if(!v) return;
+  GLOOM.t-=dt;
+  if(GLOOM.t>0) return;
+  GLOOM.t=0.3;
+  const play=(G.mode==='play'||G.mode==='p2cut'||G.mode==='p4cut');
+  const inside=play && DETAIL.indoor(P.pos.x,P.pos.z,P.pos.y+1.6);
+  const dark=inside && !G.lampOn && !G.power;
+  if(GLOOM.on!==play){ GLOOM.on=play; v.classList.toggle('on',play); }
+  if(GLOOM.deep!==dark){ GLOOM.deep=dark; v.classList.toggle('deep',dark); }
+}
 function frame(now){
   requestAnimationFrame(frame);
   let dt=(now-last)/1000; last=now;
@@ -5124,14 +5196,36 @@ function frame(now){
   }
 
   // камера
+  /* ---- жизнь камеры ----
+     Приземление проваливает камеру и она возвращается пружиной, на месте
+     герой чуть дышит, фонарь догоняет поворот головы с запозданием.
+     Мелочи, но именно от них движение перестаёт быть «на рельсах». */
+  if(P.onGround && !CAM.wasGround && CAM.fallV < -3.5)
+    CAM.dip = clamp(-CAM.fallV*0.016, 0.03, 0.16);
+  CAM.wasGround = P.onGround;
+  CAM.fallV = P.vy;
+  CAM.dip += (0 - CAM.dip) * (1 - Math.exp(-dt*9));
+
+  const moving = Math.abs(P.bob - CAM.lastBob) > 1e-4;
+  CAM.lastBob = P.bob;
+  CAM.breath += dt * (moving ? 2.0 : 1.1);
+  const idle = (G.mode==='play' && P.onGround && !moving) ? Math.sin(CAM.breath)*0.010 : 0;
+
+  const yawSpeed = (P.yaw - CAM.lastYaw + Math.PI*3) % (Math.PI*2) - Math.PI;
+  CAM.lastYaw = P.yaw;
+  CAM.lag += (yawSpeed - CAM.lag) * (1 - Math.exp(-dt*7));
+
   const eye=lerp(EYE_CROUCH,EYE_STAND,(P.hCur-H_CROUCH)/(H_STAND-H_CROUCH));
   const bob=(G.mode==='play'&&P.onGround)?Math.sin(P.bob*2)*0.035:0;
   camera.position.set(0,0,0);
-  camHolder.position.set(P.pos.x,P.pos.y+eye+bob,P.pos.z);
+  camHolder.position.set(P.pos.x,P.pos.y+eye+bob-CAM.dip+idle,P.pos.z);
   skyDome.position.copy(camHolder.position);
   camHolder.rotation.set(0,P.yaw,0);
-  camera.rotation.set(P.pitch,0,0);
-  handLamp.rotation.z=Math.sin(P.bob*2)*0.06;
+  camera.rotation.set(P.pitch,0,clamp(-CAM.lag*0.5,-0.05,0.05));
+  handLamp.rotation.z=Math.sin(P.bob*2)*0.06 + clamp(CAM.lag*1.6,-0.35,0.35);
+  handLamp.rotation.x=-CAM.dip*2.2;
+
+  updateGloom(dt);
 
   renderer.render(scene,camera);
 }
@@ -5174,8 +5268,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 3;                 /* bump: build */
-  const AKVA_VERSION = '1.1.1';         /* bump: version */
+  const AKVA_BUILD = 4;                 /* bump: build */
+  const AKVA_VERSION = '1.2.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
@@ -5248,12 +5342,38 @@ requestAnimationFrame(frame);
 
   if (btn) btn.addEventListener('click', apply);
 
-  /* Кнопка «скачать apk» — только там, где она уместна: в браузере и когда
-     файл на сервере действительно есть. */
+  /* Кнопка «скачать apk».
+     Предлагать установку тому, у кого игра уже установлена, — глупо. Поэтому
+     кнопку показываем только в обычной вкладке браузера и только если игра
+     ещё не стоит на устройстве:
+       - внутри Android-приложения    -> есть AkvaNative, скрываем;
+       - игра добавлена ярлыком (PWA) -> display-mode standalone, скрываем;
+       - apk уже установлен рядом     -> getInstalledRelatedApps его находит.
+     На компьютере кнопку оставляем: оттуда файл удобно скачать и передать. */
+  function installedAsApp(){
+    if (navigator.standalone) return true;                 // iOS «на экран»
+    for (const m of ['standalone','fullscreen','minimal-ui','window-controls-overlay']){
+      try { if (matchMedia('(display-mode: ' + m + ')').matches) return true; } catch(_){}
+    }
+    return false;
+  }
+
   (async function offerApk(){
-    if (!isWeb || typeof AkvaNative !== 'undefined') return;
     const a = el('apkbtn');
     if (!a) return;
+    a.style.display = 'none';
+
+    if (!isWeb) return;
+    if (typeof AkvaNative !== 'undefined') return;         // уже в приложении
+    if (installedAsApp()) return;                          // уже стоит ярлыком
+
+    try {
+      if (navigator.getInstalledRelatedApps) {
+        const rel = await navigator.getInstalledRelatedApps();
+        if (rel && rel.some(x => x.id === 'io.akvapark.game')) return;
+      }
+    } catch(_){}
+
     try {
       const r = await fetch('./apk.json?ts=' + Date.now(), { cache: 'no-store' });
       if (!r.ok) return;

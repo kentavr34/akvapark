@@ -118,6 +118,27 @@ cat > "$DIST/apk.json" <<EOF
 }
 EOF
 
+# ---------- 7. связь сайта с приложением ----------
+# Отпечаток берём из самого apk, а не из отдельной записи: так он не разъедется
+# с настоящим ключом подписи. По этому файлу браузер понимает, что игра уже
+# установлена, и не предлагает скачать её ещё раз.
+FP=$("$SDK/build-tools/$BUILD_TOOLS/apksigner" verify --print-certs "$DIST/akvapark.apk" \
+     | grep -i 'SHA-256 digest' | head -1 | awk '{print $NF}' \
+     | tr 'a-z' 'A-Z' | sed 's/../&:/g; s/:$//')
+if [ -n "$FP" ]; then
+  cat > "$DIST/assetlinks.json" <<EOF
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.akvapark.game",
+    "sha256_cert_fingerprints": ["$FP"]
+  }
+}]
+EOF
+  echo "==> assetlinks.json: $FP"
+fi
+
 rm -f "$KEYPROPS"
 chown -R www-data:www-data "$DIST" 2>/dev/null || true
 
