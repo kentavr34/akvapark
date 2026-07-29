@@ -183,6 +183,15 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   border:1px solid rgba(140,230,255,.55);color:#eaf8ff;letter-spacing:.5px}
 .mbtn:active{background:rgba(90,210,255,.5)}
 .mbtn.ghost{background:rgba(255,255,255,.05);border-color:rgba(150,200,225,.3);font-size:13px;padding:11px}
+/* Прогресс: закрытая часть — тускло и с замком, пройденная — со звёздами.
+   Ребёнку должно быть видно с одного взгляда, что открыто и за что боролся. */
+.mbtn.locked{background:rgba(255,255,255,.03);border-color:rgba(140,160,175,.22);
+  color:#5f7d90;pointer-events:none;position:relative}
+.mbtn.locked .lockIco{margin-right:6px}
+.mbtn.locked .lockHint{display:block;font-size:10px;font-weight:400;color:#4d6879;margin-top:3px;letter-spacing:.3px}
+.mbtn .stars{display:block;font-size:12px;letter-spacing:3px;margin-top:4px;color:#ffd97a;text-shadow:0 1px 3px #000}
+.mbtn .stars i{opacity:.28}
+.mbtn .stars i.on{opacity:1}
 #pause{display:none;background:rgba(3,17,28,.93)}
 #death{display:none;background:radial-gradient(ellipse at 50% 40%,#4a0f14 0%,#0d0507 70%)}
 #death h2{color:#ff8f8f}
@@ -380,9 +389,9 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="tag">Выбери часть</div>
     <h1>ЗАБРОШЕННЫЙ<br>АКВАПАРК</h1>
     <p>Двадцать лет назад отсюда ушли последние люди. Вода зацвела, в бассейнах кто-то живёт, а свет давно погас.<br>Дойди до пульта и включи парк обратно.</p>
-    <div class="mbtn pe" id="bStart">ЧАСТЬ 1 — ВХОД В АКВАПАРК</div>
-    <div class="mbtn pe" id="bPart2">ЧАСТЬ 2 — ОКЕАН</div>
-    <div class="mbtn pe" id="bPart2b">ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ</div>
+    <div class="mbtn pe" id="bStart"><span class="mbtxt">ЧАСТЬ 1 — ВХОД В АКВАПАРК</span></div>
+    <div class="mbtn pe" id="bPart2"><span class="mbtxt">ЧАСТЬ 2 — ОКЕАН</span></div>
+    <div class="mbtn pe" id="bPart2b"><span class="mbtxt">ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ</span></div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
     <div id="hint">Телефон: левая половина экрана — идти (джойстик появится под пальцем), правая — крутить камеру.<br>Компьютер: WASD, мышь, Shift — бег, C — присесть, Пробел — прыжок, E — взять.</div>
     <a id="apkbtn" class="mbtn ghost pe" href="./akvapark.apk" style="display:none">СКАЧАТЬ ДЛЯ ANDROID</a>
@@ -514,6 +523,68 @@ const G = {
   sound:true, sens:2,
   dead:false
 };
+
+/* ==========================================================================
+   ПРОГРЕСС ИГРОКА
+   Отдельно от G: G живёт одну игровую сессию и обнуляется на каждом
+   startLevel(), а прогресс должен пережить закрытие вкладки. Формат версионный
+   (v), чтобы будущие главы можно было добавлять не ломая старые сохранения —
+   если структура сейва когда-то изменится, знаем, с чем сравнивать.
+   Разблокировка построена на реальных сюжетных точках (см. MASTERPLAN.md):
+   'p1'   — часть 1 «Вход» пройдена целиком (включая машинный двор);
+   'p2'   — часть 2, уровень 1 «Океан» пройден;
+   'p2b'  — часть 2, уровень 2 «Спасатель» пройден.
+   Тот, кто ещё не открыл ключ следующей главы, видит кнопку с замком и текстом,
+   что именно нужно пройти — это понятнее ребёнку, чем просто недоступная кнопка. */
+const PROGRESS=(function(){
+  const KEY='akvapark_save_v1';
+  const CHAPTERS=[
+    {id:'p1',  need:null, need_label:''},
+    {id:'p2',  need:'p1', need_label:'Пройди часть 1'},
+    {id:'p2b', need:'p2', need_label:'Пройди «Океан»'}
+  ];
+  let data=load();
+
+  function load(){
+    try{
+      const raw=localStorage.getItem(KEY);
+      if(!raw) return fresh();
+      const d=JSON.parse(raw);
+      if(!d||d.v!==1) return fresh();
+      return d;
+    }catch(_){ return fresh(); }
+  }
+  function fresh(){ return {v:1,done:{},best:{},bank:0}; }
+  function save(){
+    try{ localStorage.setItem(KEY,JSON.stringify(data)); }catch(_){}
+  }
+
+  function isDone(id){ return !!data.done[id]; }
+  function isUnlocked(id){
+    const ch=CHAPTERS.find(c=>c.id===id);
+    if(!ch) return true;
+    return !ch.need || isDone(ch.need);
+  }
+  /* Звёзды — понятная детям метрика повторного прохождения: 1 за само
+     прохождение, ещё по одной за собранные монеты и за скорость. Пороги
+     нарочно мягкие — цель порадовать, а не наказать. */
+  function stars(id){ return (data.best[id]&&data.best[id].stars)||0; }
+
+  function complete(id,{coinsRatio,seconds,parTime}={}){
+    data.done[id]=true;
+    let st=1;
+    if(coinsRatio!==undefined && coinsRatio>=0.6) st++;
+    if(parTime!==undefined && seconds!==undefined && seconds<=parTime) st++;
+    const prev=data.best[id];
+    if(!prev||st>prev.stars) data.best[id]={stars:st};
+    save();
+    return st;
+  }
+  function addCoins(n){ data.bank=(data.bank||0)+n; save(); return data.bank; }
+  function bank(){ return data.bank||0; }
+
+  return {CHAPTERS,isDone,isUnlocked,stars,complete,addCoins,bank};
+})();
 
 const SENS = [0.0040,0.0055,0.0075,0.0105];
 
@@ -3377,10 +3448,13 @@ function doUse(){
       say('Спокойной ночи, аквапарк.');
       setTimeout(()=>{ d.style.opacity=0; d.style.background='';
         $('ui').classList.add('cine');
+        const st=PROGRESS.complete('p2b',{seconds:G.time,parTime:360});
+        PROGRESS.addCoins(45);
         showCard({tag:'Заброшенный аквапарк 2',sub:'ВТОРОЙ УРОВЕНЬ ПРОЙДЕН',
           stats:'<div class="statline">Спасено животных: <b>3 акулы и 16 рыб</b></div>'+
                 '<div class="statline">Монет от врача: <b>45</b></div>'+
-                '<div class="statline">Третий уровень — скоро</div>',
+                '<div class="statline">Звёзд за уровень: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
+                '<div class="statline">Дальше — скоро новая часть</div>',
           btn:'В МЕНЮ',fn:()=>{ hideCard(); backToMenu(); }});
       },2400);
       return;
@@ -3989,8 +4063,10 @@ function updP2(dt){
         setTimeout(()=>{
           d.style.opacity=0; d.style.background='';
           $('ui').classList.remove('cine');
+          const st=PROGRESS.complete('p2',{seconds:G.time,parTime:240});
           showCard({tag:'Заброшенный аквапарк 2',sub:'ПЕРВЫЙ УРОВЕНЬ ПРОЙДЕН',
-            stats:'<div class="statline">Дальше — второй уровень</div>',
+            stats:'<div class="statline">Звёзд за уровень: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
+                  '<div class="statline">Дальше — второй уровень</div>',
             btn:'УРОВЕНЬ 2',fn:()=>{ hideCard(); $('ui').classList.remove('cine');
               setTimeout(()=>startLevel(4),700); }});
         },1400);
@@ -4852,9 +4928,12 @@ function updDrive(dt){
     setTimeout(()=>{
       d.style.opacity=0; d.style.background='';
       endDrive();
-      showCard({tag:'Заброшенный аквапарк',sub:'ЧАСТЬ 2 — СКОРО',
+      const ratio=G.coinsTotal>0?G.coins/G.coinsTotal:undefined;
+      const st=PROGRESS.complete('p1',{coinsRatio:ratio,seconds:G.time,parTime:300});
+      showCard({tag:'Заброшенный аквапарк',sub:'ЧАСТЬ 1 ПРОЙДЕНА',
         stats:'<div class="statline">Монет всего: <b>'+G.coins+'</b></div>'+
-              '<div class="statline">Тормоз нажат: <b>'+CUT.braked+' раз</b></div>',
+              '<div class="statline">Тормоз нажат: <b>'+CUT.braked+' раз</b></div>'+
+              '<div class="statline">Звёзд за часть: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>',
         btn:'ЧАСТЬ 2', fn:()=>{ hideCard(); $('ui').classList.remove('cine');
           setTimeout(()=>startLevel(3),700); }});
     },1500);
@@ -4885,6 +4964,30 @@ function backToMenu(){
   SND.music(false); SND.drive(false);
   G.mode='menu'; $('menu').style.display='flex';
   $('ui').classList.remove('cine'); SND.ambient(false);
+  renderMenu();
+}
+
+/* Перерисовать главное меню под сохранённый прогресс: закрытые главы —
+   тускло, с замком и подсказкой что пройти; открытые и пройденные — со
+   звёздами за лучший результат. */
+function renderMenu(){
+  const stxt=n=>{ let s=''; for(let i=0;i<3;i++) s+='<i class="'+(i<n?'on':'')+'">★</i>'; return s; };
+  const draw=(id,chId,label)=>{
+    const el=$(id); if(!el) return;
+    const unlocked=PROGRESS.isUnlocked(chId);
+    el.classList.toggle('locked',!unlocked);
+    if(!unlocked){
+      const ch=PROGRESS.CHAPTERS.find(c=>c.id===chId);
+      el.innerHTML='<span class="mbtxt"><span class="lockIco">🔒</span>'+label+
+        '<span class="lockHint">'+(ch?ch.need_label:'')+'</span></span>';
+    } else {
+      const n=PROGRESS.stars(chId);
+      el.innerHTML='<span class="mbtxt">'+label+(n>0?'<span class="stars">'+stxt(n)+'</span>':'')+'</span>';
+    }
+  };
+  draw('bStart','p1','ЧАСТЬ 1 — ВХОД В АКВАПАРК');
+  draw('bPart2','p2','ЧАСТЬ 2 — ОКЕАН');
+  draw('bPart2b','p2b','ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ');
 }
 
 /* стрелка-указатель к текущей задаче */
@@ -5233,6 +5336,7 @@ function frame(now){
 /* старт */
 $('loading').style.display='none';
 $('menu').style.display='flex';
+renderMenu();
 buildLevel(); DETAIL.build(1); spawnBeasts(); makeFins(); initTasks(TASKS); renderHotbar(); updHUD();
 P.pos.set(0,0.2,-14);
 
@@ -5268,8 +5372,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 4;                 /* bump: build */
-  const AKVA_VERSION = '1.2.0';         /* bump: version */
+  const AKVA_BUILD = 5;                 /* bump: build */
+  const AKVA_VERSION = '1.3.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
