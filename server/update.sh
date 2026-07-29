@@ -36,12 +36,13 @@ if [ ! -s "$NEW_INDEX" ] || ! grep -q '</html>' "$NEW_INDEX"; then
   say "ОТМЕНА: index.html битый или пустой, оставляю прежнюю версию"
   exit 1
 fi
-if ! node -e "JSON.parse(require('fs').readFileSync('$REPO/version.json','utf8'))" 2>/dev/null; then
-  say "ОТМЕНА: version.json не разбирается"
+JSON_BUILD=$(grep -o '"build"[[:space:]]*:[[:space:]]*[0-9]\+' "$REPO/version.json" | grep -o '[0-9]\+$' || echo "")
+JSON_VER=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$REPO/version.json" | sed 's/.*"\([^"]*\)"$/\1/' || echo "")
+if [ -z "$JSON_BUILD" ] || [ -z "$JSON_VER" ]; then
+  say "ОТМЕНА: version.json не читается (build='$JSON_BUILD' version='$JSON_VER')"
   exit 1
 fi
-HTML_BUILD=$(grep -o 'const AKVA_BUILD = [0-9]*' "$NEW_INDEX" | grep -o '[0-9]*' || echo "")
-JSON_BUILD=$(node -e "console.log(JSON.parse(require('fs').readFileSync('$REPO/version.json','utf8')).build)")
+HTML_BUILD=$(grep -o 'const AKVA_BUILD = [0-9]\+' "$NEW_INDEX" | grep -o '[0-9]\+$' || echo "")
 if [ "$HTML_BUILD" != "$JSON_BUILD" ]; then
   say "ОТМЕНА: номера сборки разошлись (html=$HTML_BUILD json=$JSON_BUILD) — игроки зациклятся на обновлении"
   exit 1
@@ -62,4 +63,4 @@ mv -f "$STAGE/version.json.new"    "$WWW/version.json"   # сигнал «игр
 rm -rf "$STAGE"
 
 chown -R www-data:www-data "$WWW" 2>/dev/null || true
-say "выложена сборка $JSON_BUILD ($(node -e "console.log(JSON.parse(require('fs').readFileSync('$REPO/version.json','utf8')).version)"))"
+say "выложена сборка $JSON_BUILD (версия $JSON_VER)"
