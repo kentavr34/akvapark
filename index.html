@@ -168,6 +168,26 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   background:rgba(255,190,60,.18);border:1px solid rgba(255,205,90,.5)}
 .shopItem .pr:active{background:rgba(255,190,60,.45)}
 
+/* ---------- ГАРАЖ (косметика за копилку) ---------- */
+#garagePanel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(92vw,420px);max-height:82vh;overflow:auto;
+  background:rgba(5,24,38,.97);border:1px solid rgba(120,220,255,.4);
+  border-radius:14px;padding:16px;display:none;box-shadow:0 20px 60px rgba(0,0,0,.7);z-index:40}
+#garagePanel h3{font-size:15px;color:#7fd8ff;margin-bottom:2px}
+#garagePanel .sub{font-size:11px;color:#8fb8cc;margin-bottom:4px}
+#garageBank{font-size:13px;font-weight:800;color:#ffd97a;margin-bottom:12px}
+.garCat{font-size:10px;letter-spacing:1.5px;color:#5f8ea6;text-transform:uppercase;margin:12px 0 6px}
+.garItem{display:flex;align-items:center;gap:10px;padding:9px;border-radius:10px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(120,220,255,.2);margin-bottom:8px}
+.garItem.equipped{border-color:rgba(130,255,170,.6);background:rgba(80,255,150,.08)}
+.garSwatch{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.5);flex:0 0 auto}
+.garItem .nm{flex:1;font-size:12px;line-height:1.3}
+.garItem .act{font-size:12px;font-weight:800;padding:6px 12px;border-radius:8px;white-space:nowrap}
+.garItem .act.buy{color:#ffd97a;background:rgba(255,190,60,.18);border:1px solid rgba(255,205,90,.5)}
+.garItem .act.equip{color:#7fd8ff;background:rgba(90,200,255,.15);border:1px solid rgba(140,220,255,.45)}
+.garItem .act.on{color:#7dffb0;background:rgba(80,255,150,.15);border:1px solid rgba(130,255,170,.5)}
+.garItem .act:active{filter:brightness(1.3)}
+
 /* ---------- ЭКРАНЫ ---------- */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;text-align:center;padding:24px;
@@ -362,6 +382,14 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div id="bagClose2" class="pe" style="margin-top:12px;width:100%;padding:10px;border-radius:9px;background:rgba(60,170,220,.25);border:1px solid rgba(140,230,255,.5);text-align:center;font-size:13px;font-weight:700">ЗАКРЫТЬ</div>
   </div>
 
+  <div id="garagePanel" class="pe">
+    <h3>Гараж</h3>
+    <div class="sub">Косметика за монеты из копилки. Ни на что не влияет — только вид.</div>
+    <div id="garageBank">Монет: 0</div>
+    <div id="garageList"></div>
+    <div class="mbtn ghost pe" id="garageClose" style="width:100%;margin-top:6px">ЗАКРЫТЬ</div>
+  </div>
+
   <div id="wirePanel" class="pe">
     <h3>ЩИТ ГЕНЕРАТОРА</h3>
     <div class="wsub">Перетащи провод в гнездо того же цвета. Или нажми на провод, потом на гнездо.</div>
@@ -393,6 +421,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="mbtn pe" id="bPart2"><span class="mbtxt">ЧАСТЬ 2 — ОКЕАН</span></div>
     <div class="mbtn pe" id="bPart2b"><span class="mbtxt">ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ</span></div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
+    <div class="mbtn ghost pe" id="bGarage">🎨 ГАРАЖ</div>
     <div id="hint">Телефон: левая половина экрана — идти (джойстик появится под пальцем), правая — крутить камеру.<br>Компьютер: WASD, мышь, Shift — бег, C — присесть, Пробел — прыжок, E — взять.</div>
     <a id="apkbtn" class="mbtn ghost pe" href="./akvapark.apk" style="display:none">СКАЧАТЬ ДЛЯ ANDROID</a>
     <div id="verline">версия <span id="verNum">—</span> <span id="verState"></span></div>
@@ -551,10 +580,14 @@ const PROGRESS=(function(){
       if(!raw) return fresh();
       const d=JSON.parse(raw);
       if(!d||d.v!==1) return fresh();
+      // косметика добавлена позже v1 — у старых сохранений её просто нет,
+      // дозаполняем, чтобы не терять уже пройденные главы игрока
+      if(!d.owned) d.owned={};
+      if(!d.equipped) d.equipped={};
       return d;
     }catch(_){ return fresh(); }
   }
-  function fresh(){ return {v:1,done:{},best:{},bank:0}; }
+  function fresh(){ return {v:1,done:{},best:{},bank:0,owned:{},equipped:{}}; }
   function save(){
     try{ localStorage.setItem(KEY,JSON.stringify(data)); }catch(_){}
   }
@@ -583,7 +616,17 @@ const PROGRESS=(function(){
   function addCoins(n){ data.bank=(data.bank||0)+n; save(); return data.bank; }
   function bank(){ return data.bank||0; }
 
-  return {CHAPTERS,isDone,isUnlocked,stars,complete,addCoins,bank};
+  /* ---- косметика: цвет фонаря и куртки, за копилку, только внешний вид ---- */
+  function owns(id){ return !!data.owned[id]; }
+  function buy(id,price){
+    if(owns(id)) return true;
+    if((data.bank||0)<price) return false;
+    data.bank-=price; data.owned[id]=true; save(); return true;
+  }
+  function equip(cat,id){ data.equipped[cat]=id; save(); }
+  function equipped(cat,fallback){ return data.equipped[cat]||fallback; }
+
+  return {CHAPTERS,isDone,isUnlocked,stars,complete,addCoins,bank,owns,buy,equip,equipped};
 })();
 
 const SENS = [0.0040,0.0055,0.0075,0.0105];
@@ -1275,6 +1318,7 @@ function modelHand(){
   palm.position.z=-0.13; g.add(palm);
   const thumb=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.055,0.10),skin);
   thumb.position.set(0.09,0.02,-0.15); thumb.rotation.z=-0.3; g.add(thumb);
+  g.userData.sleeve=sleeve; g.userData.cuff=cuff;   // для косметики из гаража
   return g;
 }
 const bareHand=modelHand();
@@ -1282,6 +1326,36 @@ bareHand.position.set(0.28,-0.44,-0.88);
 bareHand.rotation.set(0.24,-0.34,-0.26);
 bareHand.scale.setScalar(1.0);
 bareHand.visible=false; camera.add(bareHand);
+
+/* ==========================================================================
+   КОСМЕТИКА
+   Только внешний вид — цвет луча фонаря и куртки героя. Ничего не покупается
+   за реальные деньги и ничто не даёт игрового преимущества: копилка полнится
+   монетами, которые игрок и так собирает по уровням (см. MASTERPLAN.md, п.6).
+   ========================================================================== */
+const COSMETIC_ITEMS=[
+  {id:'lamp_warm',   cat:'lamp',   name:'Тёплый луч',      price:0,  swatch:'#fff0c0', color:0xfff0c0, lens:0xfff8d8},
+  {id:'lamp_cyan',   cat:'lamp',   name:'Ледяной луч',     price:30, swatch:'#9fe8ff', color:0x9fe8ff, lens:0xd8f6ff},
+  {id:'lamp_green',  cat:'lamp',   name:'Ядовитый луч',    price:30, swatch:'#9fffa0', color:0x9fffa0, lens:0xdcffdc},
+  {id:'lamp_violet', cat:'lamp',   name:'Фиолетовый луч',  price:50, swatch:'#d79fff', color:0xd79fff, lens:0xecd8ff},
+  {id:'jacket_blue',  cat:'jacket', name:'Синяя куртка',   price:0,  swatch:'#3d6f8f', color:0x3d6f8f, cuff:0x2b5470},
+  {id:'jacket_red',   cat:'jacket', name:'Красная куртка', price:30, swatch:'#8f3d3d', color:0x8f3d3d, cuff:0x702b2b},
+  {id:'jacket_green', cat:'jacket', name:'Зелёная куртка', price:30, swatch:'#3d8f52', color:0x3d8f52, cuff:0x2b7038},
+  {id:'jacket_black', cat:'jacket', name:'Чёрная куртка',  price:50, swatch:'#2a2e33', color:0x2a2e33, cuff:0x1c1f22}
+];
+function cosmeticApply(){
+  const lampId=PROGRESS.equipped('lamp','lamp_warm');
+  const lampIt=COSMETIC_ITEMS.find(i=>i.id===lampId)||COSMETIC_ITEMS[0];
+  lamp.color.set(lampIt.color);
+  IM.lensOn.color.set(lampIt.lens);
+  eyeLight.color.set(lampIt.color);
+
+  const jacketId=PROGRESS.equipped('jacket','jacket_blue');
+  const jacketIt=COSMETIC_ITEMS.find(i=>i.id===jacketId)||COSMETIC_ITEMS[4];
+  if(bareHand.userData.sleeve) bareHand.userData.sleeve.color.set(jacketIt.color);
+  if(bareHand.userData.cuff)   bareHand.userData.cuff.color.set(jacketIt.cuff);
+}
+cosmeticApply();
 
 /* как держим каждый предмет в ЛЕВОЙ руке */
 const HOLD={
@@ -3216,6 +3290,37 @@ function openShop(){
 }
 function closeShop(){ $('shopPanel').style.display='none'; }
 
+/* ---------------- ГАРАЖ: косметика за копилку (из главного меню) ---------------- */
+function renderGarage(){
+  $('garageBank').textContent='Монет: '+PROGRESS.bank();
+  const l=$('garageList'); l.innerHTML='';
+  const cats=[['lamp','ЦВЕТ ФОНАРЯ'],['jacket','ЦВЕТ КУРТКИ']];
+  for(const [cat,title] of cats){
+    const h=document.createElement('div'); h.className='garCat'; h.textContent=title; l.appendChild(h);
+    for(const it of COSMETIC_ITEMS.filter(i=>i.cat===cat)){
+      const owned=PROGRESS.owns(it.id)||it.price===0;
+      const isEq=PROGRESS.equipped(cat,COSMETIC_ITEMS.find(x=>x.cat===cat).id)===it.id;
+      const d=document.createElement('div'); d.className='garItem'+(isEq?' equipped':'');
+      d.innerHTML=`<span class="garSwatch" style="background:${it.swatch}"></span>
+                   <span class="nm">${it.name}</span>
+                   <span class="act pe ${isEq?'on':(owned?'equip':'buy')}">${isEq?'НАДЕТО':(owned?'НАДЕТЬ':it.price+' 🪙')}</span>`;
+      bindTap(d.querySelector('.act'),()=>{
+        if(isEq) return;
+        if(!owned){
+          if(!PROGRESS.buy(it.id,it.price)){ SND.lock(); toast('Не хватает монет'); return; }
+          SND.buy();
+        }
+        PROGRESS.equip(cat,it.id);
+        cosmeticApply();
+        renderGarage();
+      });
+      l.appendChild(d);
+    }
+  }
+}
+function openGarage(){ renderGarage(); $('garagePanel').style.display='block'; }
+function closeGarage(){ $('garagePanel').style.display='none'; }
+
 /* ==========================================================================
    УПРАВЛЕНИЕ
    ========================================================================== */
@@ -4064,6 +4169,7 @@ function updP2(dt){
           d.style.opacity=0; d.style.background='';
           $('ui').classList.remove('cine');
           const st=PROGRESS.complete('p2',{seconds:G.time,parTime:240});
+          PROGRESS.addCoins(25);
           showCard({tag:'Заброшенный аквапарк 2',sub:'ПЕРВЫЙ УРОВЕНЬ ПРОЙДЕН',
             stats:'<div class="statline">Звёзд за уровень: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
                   '<div class="statline">Дальше — второй уровень</div>',
@@ -4930,6 +5036,7 @@ function updDrive(dt){
       endDrive();
       const ratio=G.coinsTotal>0?G.coins/G.coinsTotal:undefined;
       const st=PROGRESS.complete('p1',{coinsRatio:ratio,seconds:G.time,parTime:300});
+      PROGRESS.addCoins(20);
       showCard({tag:'Заброшенный аквапарк',sub:'ЧАСТЬ 1 ПРОЙДЕНА',
         stats:'<div class="statline">Монет всего: <b>'+G.coins+'</b></div>'+
               '<div class="statline">Тормоз нажат: <b>'+CUT.braked+' раз</b></div>'+
@@ -5159,6 +5266,8 @@ bindTap($('bPart2b'),()=>{ SND.init(); voicePrime(); startLevel(4); });
   hold('hUp','inF'); hold('hDown','inB'); hold('hLeft','inL'); hold('hRight','inR');
 })();
 bindTap($('bHow'),()=>{ $('menu').style.display='none'; $('howto').style.display='flex'; });
+bindTap($('bGarage'),()=>{ SND.init(); openGarage(); });
+bindTap($('garageClose'),closeGarage);
 bindTap($('bHowBack'),()=>{ $('howto').style.display='none'; $('menu').style.display='flex'; });
 bindTap($('bResume'),()=>{resume();});
 bindTap($('bRestart'),()=>{startLevel(G.level);});
@@ -5359,6 +5468,13 @@ P.pos.set(0,0.2,-14);
   },250);
 })();
 
+/* Быстрый вход в гараж: ?garage=1 — для проверки панели косметики без клика. */
+(function(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('garage')===null) return;
+  setTimeout(()=>{ try{ openGarage(); }catch(e){ console.error(e); } },250);
+})();
+
 requestAnimationFrame(frame);
 
 </script>
@@ -5372,8 +5488,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 5;                 /* bump: build */
-  const AKVA_VERSION = '1.3.0';         /* bump: version */
+  const AKVA_BUILD = 6;                 /* bump: build */
+  const AKVA_VERSION = '1.4.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
