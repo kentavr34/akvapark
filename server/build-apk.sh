@@ -80,7 +80,15 @@ if [ ! -f "$KEYSTORE" ]; then
 fi
 cp -f "$TOOLS/keystore.properties" "$KEYPROPS"
 
-# ---------- 5. сборка ----------
+# ---------- 5. игра внутрь приложения ----------
+# apk должен запускаться и без сети в первый раз, поэтому свежая игра
+# кладётся в assets. Обновления потом качает сам Updater.
+ASSETS=$REPO/android/app/src/main/assets/game
+mkdir -p "$ASSETS"
+cp -f "$REPO/index.html" "$REPO/version.json" "$ASSETS/"
+say "игра в assets: $(stat -c%s "$ASSETS/index.html") байт"
+
+# ---------- 6. сборка ----------
 say "собираю apk"
 cd "$REPO/android"
 "$GRADLE" --no-daemon -q clean assembleRelease

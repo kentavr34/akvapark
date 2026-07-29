@@ -73,25 +73,17 @@ dependencies {
     implementation 'androidx.webkit:webkit:1.11.0'
 }
 
-/* Игра — один файл. Кладём его в assets перед сборкой, чтобы приложение
-   запускалось и работало даже при первом запуске без интернета. */
-tasks.register('copyGame', Copy) {
-    from("${rootDir}/..") {
-        include 'index.html'
-        include 'version.json'
-    }
-    into layout.buildDirectory.dir('generated/game')
-}
-android.sourceSets.main.assets.srcDirs += layout.buildDirectory.dir('generated/game-assets')
-
-tasks.register('stageGameAssets', Copy) {
-    dependsOn 'copyGame'
-    from layout.buildDirectory.dir('generated/game')
-    into layout.buildDirectory.dir('generated/game-assets/game')
-}
-
-tasks.configureEach { t ->
-    if (t.name.startsWith('merge') && t.name.endsWith('Assets')) {
-        t.dependsOn 'stageGameAssets'
+/* Игра — один файл, он кладётся в app/src/main/assets/game/ скриптом
+   server/build-apk.sh ещё до запуска Gradle. Специально не задачей Gradle:
+   генерируемая папка ассетов ссорится с проверками порядка задач, а копия
+   двух файлов такой сложности не стоит.
+   Проверяем только, что файл на месте — иначе получился бы apk без игры. */
+tasks.named('preBuild').configure {
+    doFirst {
+        def game = file("${projectDir}/src/main/assets/game/index.html")
+        if (!game.exists() || game.length() < 50000) {
+            throw new GradleException(
+                "Нет игры в assets: ${game}. Запускай сборку через server/build-apk.sh")
+        }
     }
 }

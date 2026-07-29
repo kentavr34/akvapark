@@ -16,3 +16,6 @@ Thumbs.db
 *.log
 .claude/
 dist/
+
+# игра копируется в assets скриптом сборки
+android/app/src/main/assets/
