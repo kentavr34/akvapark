@@ -17,6 +17,14 @@ mkdir -p "$BASE/logs" "$WWW" "$BASE/dist"
 exec >>"$LOG" 2>&1
 say(){ echo "[$(date '+%F %T')] $*"; }
 
+# Один обновляющий за раз. Без замка таймер и ручной запуск могут совпасть
+# и подменять файлы одновременно — это ровно тот случай, когда игрок ловит
+# полуобновлённую игру.
+exec 9>"$BASE/.update.lock"
+if ! flock -n 9; then
+  exit 0
+fi
+
 cd "$REPO"
 
 git fetch --quiet origin "$BRANCH"
