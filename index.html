@@ -219,7 +219,11 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   background-clip:text;color:transparent;text-shadow:0 6px 30px rgba(0,140,200,.35);margin-bottom:6px}
 .screen h2{font-size:clamp(18px,5vw,28px);font-weight:800;margin-bottom:10px;color:#eaf8ff}
 .screen .tag{font-size:12px;letter-spacing:4px;color:#5fb6dd;text-transform:uppercase;margin-bottom:26px}
-.screen p{font-size:13px;line-height:1.6;color:#a8cfe4;max-width:440px;margin-bottom:20px}
+.screen p{font-size:13px;line-height:1.6;color:#a8cfe4;max-width:440px;margin-bottom:20px;
+  text-wrap:balance}
+.cover{width:min(40vw,150px);height:auto;border-radius:14px;margin-bottom:10px;
+  border:1px solid rgba(140,230,255,.4);box-shadow:0 10px 30px rgba(0,0,0,.5);
+  display:block}
 .mbtn{width:min(78vw,290px);padding:14px;margin:6px 0;border-radius:11px;font-size:15px;font-weight:700;
   background:linear-gradient(180deg,rgba(70,190,240,.3),rgba(30,110,160,.35));
   border:1px solid rgba(140,230,255,.55);color:#eaf8ff;letter-spacing:.5px}
@@ -448,13 +452,15 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   </div></div>
 
   <div id="menu" class="screen pe">
+    <img class="cover" src="./icons/cover.jpg" alt="">
     <div class="tag">Выбери часть</div>
     <h1>ЗАБРОШЕННЫЙ<br>АКВАПАРК</h1>
-    <p>Двадцать лет назад отсюда ушли последние люди. Вода зацвела, в бассейнах кто-то живёт, а свет давно погас.<br>Дойди до пульта и включи парк обратно.</p>
+    <p>Двадцать лет назад отсюда ушли последние люди. Вода зацвела, в бассейнах кто-то живёт, а свет давно погас.</p>
+    <p style="margin-top:-12px">Дойди до пульта и включи парк обратно.</p>
     <div class="mbtn pe" id="bStart"><span class="mbtxt">ЧАСТЬ 1 — ВХОД В АКВАПАРК</span></div>
     <div class="mbtn pe" id="bPart2"><span class="mbtxt">ЧАСТЬ 2 — ОКЕАН</span></div>
-    <div class="mbtn pe" id="bPart2b"><span class="mbtxt">ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ</span></div>
-    <div class="mbtn pe" id="bPart3"><span class="mbtxt">ЧАСТЬ 3 — МЕХАНИЧЕСКОЕ СЕРДЦЕ</span></div>
+    <div class="mbtn pe" id="bPart2b"><span class="mbtxt">ЧАСТЬ 2.2 — СПАСАТЕЛЬ</span></div>
+    <div class="mbtn pe" id="bPart3"><span class="mbtxt">ЧАСТЬ 3 — СЕРДЦЕ ПАРКА</span></div>
     <div class="mbtn pe" id="bPart4"><span class="mbtxt">ЧАСТЬ 4 — ОТКРЫТЫЙ ОСТРОВ</span></div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
     <div class="mbtn ghost pe" id="bGarage">🎨 ГАРАЖ</div>
@@ -9318,8 +9324,8 @@ function renderMenu(){
   };
   draw('bStart','p1','ЧАСТЬ 1 — ВХОД В АКВАПАРК');
   draw('bPart2','p2','ЧАСТЬ 2 — ОКЕАН');
-  draw('bPart2b','p2b','ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ');
-  draw('bPart3','p3','ЧАСТЬ 3 — МЕХАНИЧЕСКОЕ СЕРДЦЕ');
+  draw('bPart2b','p2b','ЧАСТЬ 2.2 — СПАСАТЕЛЬ');
+  draw('bPart3','p3','ЧАСТЬ 3 — СЕРДЦЕ ПАРКА');
   draw('bPart4','p4a','ЧАСТЬ 4 — ОТКРЫТЫЙ ОСТРОВ');
 }
 
@@ -10199,8 +10205,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 24;                 /* bump: build */
-  const AKVA_VERSION = '1.18.0';         /* bump: version */
+  const AKVA_BUILD = 25;                 /* bump: build */
+  const AKVA_VERSION = '1.19.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
