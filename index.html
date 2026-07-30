@@ -4897,8 +4897,14 @@ function buildCity(){
   // вертолётная площадка
   const ring=new THREE.Mesh(new THREE.TorusGeometry(4.4,0.28,6,24),M.yellow);
   ring.rotation.x=-Math.PI/2; ring.position.set(0,0.06,-16); world.add(ring);
-  // больница
-  box(0,60,26,20,0,11,wallM);
+  // больница — стены отдельными кусками, а не одним сплошным коробом:
+  // box() всегда ставит коллайдер на весь свой объём, поэтому цельный короб
+  // «запечатывал» весь салон одним блоком — дверной проём в фасаде
+  // существовал только на вид, а физически пройти внутрь было нельзя
+  // (ровно баг «дверь закрыта, дальше ничего нет», о котором сообщил Кенан).
+  wallZ(-13,50,70,0,11,wallM);
+  wallZ(13,50,70,0,11,wallM);
+  wallX(70,-13,13,0,11,wallM);
   wallX(50,-13,13,0,11,wallM,[-3,3]);
   const cr1=new THREE.Mesh(new THREE.BoxGeometry(6,1.6,0.3),new THREE.MeshLambertMaterial({color:0xd8322a}));
   cr1.position.set(0,9,49.7); world.add(cr1);
@@ -6497,8 +6503,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 19;                 /* bump: build */
-  const AKVA_VERSION = '1.15.0';         /* bump: version */
+  const AKVA_BUILD = 20;                 /* bump: build */
+  const AKVA_VERSION = '1.15.1';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
