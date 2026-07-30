@@ -420,6 +420,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="mbtn pe" id="bStart"><span class="mbtxt">ЧАСТЬ 1 — ВХОД В АКВАПАРК</span></div>
     <div class="mbtn pe" id="bPart2"><span class="mbtxt">ЧАСТЬ 2 — ОКЕАН</span></div>
     <div class="mbtn pe" id="bPart2b"><span class="mbtxt">ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ</span></div>
+    <div class="mbtn pe" id="bPart3"><span class="mbtxt">ЧАСТЬ 3 — МЕХАНИЧЕСКОЕ СЕРДЦЕ</span></div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
     <div class="mbtn ghost pe" id="bGarage">🎨 ГАРАЖ</div>
     <div id="hint">Телефон: левая половина экрана — идти (джойстик появится под пальцем), правая — крутить камеру.<br>Компьютер: WASD, мышь, Shift — бег, C — присесть, Пробел — прыжок, E — взять.</div>
@@ -570,7 +571,8 @@ const PROGRESS=(function(){
   const CHAPTERS=[
     {id:'p1',  need:null, need_label:''},
     {id:'p2',  need:'p1', need_label:'Пройди часть 1'},
-    {id:'p2b', need:'p2', need_label:'Пройди «Океан»'}
+    {id:'p2b', need:'p2', need_label:'Пройди «Океан»'},
+    {id:'p3',  need:'p2b', need_label:'Пройди «Спасателя»'}
   ];
   let data=load();
 
@@ -2214,7 +2216,8 @@ const DETAIL=(function(){
     heli:{x0:-3,x1:3,y0:0.3,y1:2.4,z0:-4,z1:4},
     park:{x0:-22,x1:22,y0:0.3,y1:5.5,z0:-22,z1:36},
     park2:{x0:-22,x1:22,y0:0.3,y1:5.5,z0:-22,z1:36},
-    city:{x0:-40,x1:40,y0:0.3,y1:8,z0:-24,z1:70}
+    city:{x0:-40,x1:40,y0:0.3,y1:8,z0:-24,z1:70},
+    5:{x0:-16,x1:16,y0:0.3,y1:3.3,z0:-6,z1:58}
   };
   function build(level,scene){
     reset();
@@ -2222,6 +2225,7 @@ const DETAIL=(function(){
     else if(level===2) buildL2();
     else if(level===3) buildL3();
     else if(level===4) buildL4(scene);
+    else if(level===5) buildL5();
     else buildGeneric();
     collectCeilings();
     const box=DUST_BOX[level===4?scene:level]||DUST_BOX[1];
@@ -2332,6 +2336,23 @@ const DETAIL=(function(){
       grassPatch(30,20,4,Math.floor(QUALITY.grass*0.16),0.25,0.7);
       puddle(-14,30,2.2,0.02); puddle(16,-4,1.8,0.02);
     }
+  }
+
+  /* Часть 3 «Механическое сердце»: вход -6..2, коридор 2..40, щитовая слева
+     (x -16..-2), вентиляция справа (x 2..16), насосная в конце (40..58).
+     Генераторы-щиты и рубильник — свои коллайдеры в buildLevel5(), декор их
+     слегка задевать может (как и на остальных уровнях), это не мешает. */
+  function buildL5(){
+    litter(-2.5,2.5,-5,1,Math.floor(QUALITY.debris*0.25),0.02);
+    pipe(-1.85,3.0,2,-1.85,40,0.07,M.metal);
+    pipe(1.85,3.0,2,1.85,40,0.07,M.metal);
+    litter(-1.8,1.8,3,39,Math.floor(QUALITY.debris*0.4),0.02);
+    litter(-15,-3,7,17,Math.floor(QUALITY.debris*0.6),0.02);
+    for(const x of [3.5,6,10.5,13.5]) pipe(x,3.1,21,x,31,0.13,M.metal);
+    litter(3,15,21,31,Math.floor(QUALITY.debris*0.6),0.02);
+    litter(-9,9,41,50,Math.floor(QUALITY.debris*0.5),0.02);
+    puddle(-2,49,1.6,0.02);
+    dressWater();   // подхватит waters[] с флудом насосной — даст блики на дне
   }
 
   function buildGeneric(){
@@ -2810,6 +2831,7 @@ function renderTasks(){
     if(G.level===1&&i===8&&G.beastTotal) txt+=' ('+G.caught+'/'+G.beastTotal+')';
     if(G.level===2&&i===1) txt+=' ('+GEN_WIRE.done+'/'+GEN_WIRE.n+')';
     if(G.level===4&&i===3) txt+=' ('+P4.caught+'/3)';
+    if(G.level===5&&i===1) txt+=' ('+L5.fixed+'/3)';
     html+=`<div class="task ${t.done?'done':''}"><span class="tick">${t.done?'✓':'•'}</span><span>${txt}</span></div>`;
   }
   list.innerHTML=html;
@@ -3141,6 +3163,90 @@ function updBeasts(dt){
       if(b.bite<=0 && b.state==='chase'){
         b.bite=1.8; b.recoil=1.1;
         damage(c.dmg, c.name+' достала первой.');
+        P.pos.x+=dx/dist*1.1; P.pos.z+=dz/dist*1.1;
+      }
+    }
+
+    b.mesh.position.set(b.pos.x,0,b.pos.z);
+    b.mesh.rotation.y=ang+Math.PI;
+    b.anim+=dt*sp*2.6;
+    b.legs.forEach((l,i)=>l.rotation.x=Math.sin(b.anim+(i%2)*3.14)*0.6);
+    b.tail.rotation.x=Math.sin(b.anim*0.8)*0.35;
+  }
+}
+
+/* ==========================================================================
+   ДВИЖОК «СТОРОЖ» — тот, от кого не отбиться, только не попасться
+   (см. docs/MASTERPLAN.md, акт 3). Отдельный от beasts[]/swordSwing() —
+   намеренно: если существо ловится мечом+сачком, оно перестаёт быть угрозой
+   уклонения, ради которой его вообще делали. Модель и повадки (патруль →
+   погоня в радиусе → отпугивается фонарём в лицо → укус с откатом при
+   контакте) переиспользуют makeBeast()/тот же процедурный корпус — только
+   без состояний stun/caught: оглушить/поймать сторожа нельзя в принципе.
+   spawnGuardian({name,color,dark,eye,start:[x,z],path:[[x,z],...],area,dmg}) */
+let guardians=[];
+function spawnGuardian(cfg){
+  const c=Object.assign({
+    id:'gd'+(guardians.length+1), name:'Сторож',
+    color:0x2c2f28, dark:0x15170e, eye:0xff5a3a,
+    bw:0.72, bh:0.64, bl:1.55, legL:0.42, y:0.64, rad:0.78,
+    spPatrol:1.7, spChase:3.6, dmg:16
+  },cfg);
+  if(!c.area) c.area=[c.start[0]-10,c.start[0]+10,c.start[1]-10,c.start[1]+10];
+  if(!c.path) c.path=[c.start];
+  const b=makeBeast(c);
+  b.ring.visible=false;                 // кольцо «оглушён» этому существу не нужно
+  guardians.push(b);
+  return b;
+}
+function updGuardians(dt){
+  if(G.mode!=='play') return;
+  const pp=P.pos;
+  for(const b of guardians){
+    const c=b.cfg;
+    let dx=pp.x-b.pos.x, dz=pp.z-b.pos.z;
+    let dist=Math.hypot(dx,dz)||0.0001;
+    const inArea = pp.x>c.area[0]-2 && pp.x<c.area[1]+2 && pp.z>c.area[2]-2 && pp.z<c.area[3]+2 && pp.y>-1;
+    if(b.bite>0) b.bite-=dt;
+    if(b.recoil>0) b.recoil-=dt;
+
+    if(G.lampOn&&G.hasLamp&&dist<11){
+      const fx=-Math.sin(P.yaw), fz=-Math.cos(P.yaw);
+      if((-fx*dx-fz*dz)/dist>0.85) b.flee=2.4;
+    }
+
+    let sp=c.spPatrol, tx=0, tz=0;
+    if(b.flee>0 || b.recoil>0){
+      b.flee-=dt; sp=c.spChase*0.8;
+      tx=b.pos.x-dx; tz=b.pos.z-dz;
+      b.state='flee';
+    } else if(inArea && dist<13){
+      b.state='chase'; sp=G.crouch?c.spChase*0.6:c.spChase; tx=pp.x; tz=pp.z;
+      b.growl-=dt; if(b.growl<=0){ b.growl=rnd(1.8,3.6); SND.growl(); }
+      if(!G._seenGuardian){ G._seenGuardian=1; say('Оно меня заметило. Бежать!'); }
+    } else {
+      b.state='patrol';
+      const w=c.path[b.wp]; tx=w[0]; tz=w[1];
+      if(Math.hypot(tx-b.pos.x,tz-b.pos.z)<1.2) b.wp=(b.wp+1)%c.path.length;
+    }
+
+    const ang=Math.atan2(tx-b.pos.x,tz-b.pos.z);
+    b.ang=ang;
+    const nx=b.pos.x+Math.sin(ang)*sp*dt, nz=b.pos.z+Math.cos(ang)*sp*dt;
+    if(!blocked(nx,nz,0,0.9)){ b.pos.x=nx; b.pos.z=nz; }
+    else b.wp=(b.wp+1)%c.path.length;
+    b.pos.x=clamp(b.pos.x,c.area[0],c.area[1]);
+    b.pos.z=clamp(b.pos.z,c.area[2],c.area[3]);
+
+    dx=pp.x-b.pos.x; dz=pp.z-b.pos.z; dist=Math.hypot(dx,dz)||0.0001;
+    const sep=c.rad+0.45;
+    if(dist<sep && pp.y<1.4){
+      const push=(sep-dist)/dist;
+      P.pos.x+=dx*push*0.75; P.pos.z+=dz*push*0.75;
+      b.pos.x-=dx*push*0.25; b.pos.z-=dz*push*0.25;
+      if(b.bite<=0 && b.state==='chase'){
+        b.bite=1.8; b.recoil=1.1;
+        damage(c.dmg, c.name+' догнал в темноте.');
         P.pos.x+=dx/dist*1.1; P.pos.z+=dz/dist*1.1;
       }
     }
@@ -5309,6 +5415,7 @@ function renderMenu(){
   draw('bStart','p1','ЧАСТЬ 1 — ВХОД В АКВАПАРК');
   draw('bPart2','p2','ЧАСТЬ 2 — ОКЕАН');
   draw('bPart2b','p2b','ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ');
+  draw('bPart3','p3','ЧАСТЬ 3 — МЕХАНИЧЕСКОЕ СЕРДЦЕ');
 }
 
 /* стрелка-указатель к текущей задаче */
@@ -5343,6 +5450,168 @@ function updCompass(){
 }
 
 /* ==========================================================================
+   ЧАСТЬ 3 — «МЕХАНИЧЕСКОЕ СЕРДЦЕ» (акт 3, см. docs/MASTERPLAN.md)
+   Техническое подполье аквапарка: щитовая, насосная, вентиляция — три
+   независимых точки ремонта (движок addRepairPoint из библиотеки квестов,
+   любой порядок), жетоны-находки от персонала, который не успел уйти
+   (addLoreToken), и сторож в коридоре, от которого можно только уклоняться —
+   меча и сачка на этом уровне у героя нет.
+   ========================================================================== */
+const TASKS5=[
+  'Спуститься в техническое подполье',
+  'Почини три подсистемы: щитовую, насосную, вентиляцию',
+  'Включить главный рубильник'
+];
+const L5={fixed:0, leverReady:false};
+
+function buildLevel5(){
+  const wallM =new THREE.MeshLambertMaterial({color:0x565c5f});
+  const wallM2=new THREE.MeshLambertMaterial({color:0x3d4245});
+  const floorM=new THREE.MeshLambertMaterial({color:0x44494b});
+
+  // ---- входная комната (люк сверху) ----
+  plane(0,-2,6,8,0.02,floorM);
+  plane(0,-2,6,8,3.2,wallM2,Math.PI/2);
+  wallX(-6,-3,3,0,3.2,wallM);
+  wallZ(-3,-6,2,0,3.2,wallM);
+  wallZ(3,-6,2,0,3.2,wallM);
+  wallX(2,-3,3,0,3.2,wallM,[-2,2]);
+  sign(0,2.6,-5.6,3.4,0.7,'ТЕХ. ПОДПОЛЬЕ','#123a52','#9ff0ff',Math.PI);
+  const hatch=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,0.12,14),M.metal);
+  hatch.position.set(0,3.15,-2); world.add(hatch);
+  zone(-3,3,-6,2, 0,-2, Math.PI, 'Люк');
+
+  // ---- коридор ----
+  plane(0,21,4,38,0.02,floorM);
+  plane(0,21,4,38,3.4,wallM2,Math.PI/2);
+  wallZ(-2,2,40,0,3.4,wallM,[9,13]);    // проём в щитовую
+  wallZ(2,2,40,0,3.4,wallM,[23,27]);    // проём в вентиляцию
+  for(const z of [8,16,24,32]){
+    const pl=new THREE.PointLight(0xbcd8e8,0.85,10,2); pl.position.set(0,3.0,z);
+    scene.add(pl); ceilLights.push(pl);
+  }
+  sign(-1.85,2.0,10.8,1.6,0.5,'ЩИТОВАЯ','#123a52','#9ff0ff',Math.PI/2);
+  sign(1.85,2.0,24.8,1.6,0.5,'ВЕНТИЛЯЦИЯ','#123a52','#9ff0ff',-Math.PI/2);
+
+  // ---- щитовая (запад) ----
+  plane(-9,12,14,12,0.02,floorM);
+  plane(-9,12,14,12,3.4,wallM2,Math.PI/2);
+  wallX(6,-16,-2,0,3.4,wallM);
+  wallX(18,-16,-2,0,3.4,wallM);
+  wallZ(-16,6,18,0,3.4,wallM);
+  const panelGen=modelGenerator();
+  panelGen.position.set(-9,0,12); panelGen.rotation.y=Math.PI/2; world.add(panelGen);
+  colliders.push({x0:-9.3,x1:-6.7,z0:11.1,z1:12.9,y0:0,y1:2.6,walk:true});
+  addRepairPoint(-9,1.4,10.4,{
+    label:'Щит освещения', radius:2.4,
+    getLeds:()=>panelGen.userData.leds,
+    onDone:()=>onRepairFixed('Щитовая ожила. Одна из трёх.')
+  });
+
+  // ---- вентиляция (восток) ----
+  plane(9,26,14,12,0.02,floorM);
+  plane(9,26,14,12,3.4,wallM2,Math.PI/2);
+  wallX(20,2,16,0,3.4,wallM);
+  wallX(32,2,16,0,3.4,wallM);
+  wallZ(16,20,32,0,3.4,wallM);
+  const panelVent=modelGenerator();
+  panelVent.position.set(9,0,26); panelVent.rotation.y=-Math.PI/2; world.add(panelVent);
+  colliders.push({x0:6.7,x1:9.3,z0:25.1,z1:26.9,y0:0,y1:2.6,walk:true});
+  addRepairPoint(9,1.4,27.6,{
+    label:'Щит вентиляции', radius:2.4,
+    getLeds:()=>panelVent.userData.leds,
+    onDone:()=>onRepairFixed('Воздух пошёл. Вторая система готова.')
+  });
+
+  // ---- насосная (север, «сердце») ----
+  plane(0,49,20,18,0.02,floorM);
+  plane(0,49,20,18,4.2,wallM2,Math.PI/2);
+  wallZ(-10,40,58,0,4.2,wallM);
+  wallZ(10,40,58,0,4.2,wallM);
+  wallX(58,-10,10,0,4.2,wallM);
+  wallX(40,-10,-2,0,4.2,wallM);
+  wallX(40,2,10,0,4.2,wallM);
+  sign(0,3.6,57.6,6,1.1,'НАСОСНАЯ','#123a52','#9ff0ff',Math.PI);
+  // мелкий затоп у дальней стены — насос протекал 20 лет
+  holes.push({x0:-6,x1:6,z0:51,z1:57,bottom:-0.4});
+  waters.push({x0:-6,x1:6,z0:51,z1:57,surface:0.02});
+  const panelPump=modelGenerator();
+  panelPump.position.set(-6,0,44); panelPump.rotation.y=Math.PI*0.6; world.add(panelPump);
+  colliders.push({x0:-7.3,x1:-4.7,z0:43.1,z1:44.9,y0:0,y1:2.6,walk:true});
+  addRepairPoint(-6,1.4,42.6,{
+    label:'Щит насосной', radius:2.4,
+    getLeds:()=>panelPump.userData.leds,
+    onDone:()=>onRepairFixed('Вода пошла по кругу. Третья готова.')
+  });
+  for(const l of [[-5,44],[5,50],[-5,54]]){
+    const pl=new THREE.PointLight(0xbcd8e8,0.9,12,2); pl.position.set(l[0],3.8,l[1]);
+    scene.add(pl); ceilLights.push(pl);
+  }
+  // главный рубильник — виден сразу, но толку от него нет, пока не готовы все три
+  const lever=new THREE.Group();
+  const leverBase=new THREE.Mesh(new THREE.BoxGeometry(1.1,1.3,0.5),M.metal);
+  leverBase.position.y=0.65; lever.add(leverBase);
+  const leverStick=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.9,8),M.rust);
+  leverStick.position.set(0,1.35,0); leverStick.rotation.z=0.5; lever.add(leverStick);
+  lever.position.set(6,0,55); world.add(lever);
+  colliders.push({x0:5.3,x1:6.7,z0:54.6,z1:55.6,y0:0,y1:1.4,walk:true});
+  sign(6,2.4,54.4,3,0.7,'РУБИЛЬНИК','#123a52','#9ff0ff',Math.PI);
+  addInter(6,1.2,53.8,2.4,'Главный рубильник',()=>{
+    if(L5.fixed<3){ SND.lock(); toast('Сначала почини щитовую, насосную и вентиляцию'); return; }
+    finishLevel5();
+  });
+
+  // ---- жетоны персонала: короткий лор без кат-сцен ----
+  addLoreToken(-1.3,1.0,-3.5,{id:'l5_note1',name:'Записка у люка',
+    text:'«Спускаюсь проверить щит. Если не вернусь за час — зовите смену.» Не вернулся.'});
+  addLoreToken(-13,1.0,15,{id:'l5_note2',name:'Жетон электрика',
+    text:'Именной жетон. На обратной стороне нацарапано: «Оно ходит по коридору. Не одно я его слышал.»'});
+  addLoreToken(13,1.0,29,{id:'l5_note3',name:'Вахтенный журнал',
+    text:'Последняя запись обрывается на полуслове.'});
+  addLoreToken(4,1.0,56,{id:'l5_note4',name:'Фото со смены',
+    text:'Вся бригада насосной. Улыбаются. Дата — за месяц до закрытия парка.'});
+
+  // ---- сторож: патрулирует коридор, гнаться может и в комнаты ----
+  spawnGuardian({
+    name:'Обходчик', start:[0,20], path:[[0,4],[0,20],[0,38],[0,20]],
+    area:[-15,15,0,40], dmg:16
+  });
+}
+
+/* Общий колбэк для всех трёх щитов части 3: считает готовые системы и
+   открывает рубильник, когда собраны все. */
+function onRepairFixed(line){
+  L5.fixed++;
+  SND.bells();
+  say(line);
+  toast('Готово систем: '+L5.fixed+' из 3');
+  renderTasks();
+  if(L5.fixed>=3){
+    L5.leverReady=true;
+    nextTask(1);
+    say('Все три готовы. Рубильник в насосной.');
+  }
+}
+function finishLevel5(){
+  SND.win();
+  const d=$('dmgflash'); d.style.background='#000'; d.style.opacity=1;
+  say('Есть! Вся сеть разом ожила.');
+  setTimeout(()=>{
+    d.style.opacity=0; d.style.background='';
+    $('ui').classList.add('cine');
+    ambLight.intensity=1.0; ceilLights.forEach(l=>l.intensity=1.6);
+    nextTask(2);
+    const st=PROGRESS.complete('p3',{seconds:G.time,parTime:420});
+    PROGRESS.addCoins(35);
+    showCard({tag:'Заброшенный аквапарк',sub:'ЧАСТЬ 3 ПРОЙДЕНА',
+      stats:'<div class="statline">Найдено жетонов: <b>'+PROGRESS.loreFound().length+'</b></div>'+
+            '<div class="statline">Звёзд за часть: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
+            '<div class="statline">Дальше — открытый парк. Скоро.</div>',
+      btn:'В МЕНЮ', fn:()=>{ hideCard(); $('ui').classList.remove('cine'); backToMenu(); }});
+  },1800);
+}
+
+/* ==========================================================================
    МЕНЮ / ЖИЗНЕННЫЙ ЦИКЛ
    ========================================================================== */
 function pause(){ if(G.mode!=='play') return; voiceStop(); G.mode='pause'; $('pause').style.display='flex';
@@ -5374,7 +5643,7 @@ function clearWorld(){
   ceilLights.length=0;
   colliders.length=0; holes.length=0; waters.length=0;
   interactives.length=0; pickups.length=0; zones.length=0; fins.length=0;
-  plankBridge=null; beasts=[];
+  plankBridge=null; beasts=[]; guardians=[];
   DETAIL.reset();
 }
 function startLevel(n){
@@ -5430,7 +5699,21 @@ function startLevel(n){
     G.mode='play'; updateHands();
     SND.init(); SND.ambient(true);
     return;
-  } else {
+  } else if(G.level===5){
+    ambLight.intensity=0.16; hemi.intensity=0.22; scene.fog.density=0.028;
+    scene.fog.color.set(0x0a0e10); renderer.setClearColor(0x030405);
+    skyDome.visible=false; sunSprite.visible=false;
+    beasts=[]; G.beastTotal=0; guardians=[];
+    G._seenGuardian=0;
+    L5.fixed=0; L5.leverReady=false;
+    // три щита части 3 создаются заново каждый раз внутри buildLevel5()
+    // (addRepairPoint сам вызывает resetWirePuzzle) — отдельно сбрасывать не нужно
+    buildLevel5(); DETAIL.build(5);
+    initTasks(TASKS5); nextTask(0);
+    G.hasLamp=true; G.battery=100;      // фонарь уже с собой — без него тут никак
+    P.pos.set(0,0.2,-2); P.yaw=Math.PI;
+    G.checkpoint.set(0,0,-2); G.checkpointYaw=Math.PI;
+  } else if(G.level===3){
     ambLight.intensity=0.85; hemi.intensity=0.8; scene.fog.density=0.006;
     scene.fog.color.set(0x6d97a8); renderer.setClearColor(0x0a2434);
     beasts=[]; G.beastTotal=0;
@@ -5467,6 +5750,7 @@ bindTap($('brakeBtn'),pressBrake);
 bindTap($('bigBtn'),()=>{ if(P2.bigFn) P2.bigFn(); });
 bindTap($('bPart2'),()=>{ SND.init(); voicePrime(); startLevel(3); });
 bindTap($('bPart2b'),()=>{ SND.init(); voicePrime(); startLevel(4); });
+bindTap($('bPart3'),()=>{ SND.init(); voicePrime(); startLevel(5); });
 (function(){
   const hold=(id,key)=>{
     const el=$(id); if(!el) return;
@@ -5555,6 +5839,7 @@ function frame(now){
               || (G.level===4&&(P4.scene==='dive'||P4.scene==='fix'));
     if(!noWalk) movePlayer(dt,ix,iz);
     updBeasts(dt);
+    updGuardians(dt);
     updHeat(dt);
     if(G.level===3) updP2(dt);
     if(G.level===4) updP4(dt);
@@ -5589,9 +5874,9 @@ function frame(now){
     } else handSword.rotation.set(-0.3,0.35,-0.5);
     handSword.visible=hasItem('sword');
 
-    // фонарь
+    // фонарь — в части 3 садится заметно быстрее (старая проводка, старая батарея)
     if(G.lampOn){
-      G.battery-=dt*0.55;
+      G.battery-=dt*(G.level===5?0.95:0.55);
       if(G.battery<=0){ G.battery=0; G.lampOn=false; setBtn('bLamp',false);
         handGlow.visible=false; lampFade=5; toast('Батарея села'); updateHands(); }
       lamp.intensity=lerp(lamp.intensity,1.5+Math.sin(G.time*23)*0.12,0.3);
@@ -5668,7 +5953,7 @@ P.pos.set(0,0.2,-14);
 (function(){
   const q=new URLSearchParams(location.search);
   const L=parseInt(q.get('level'),10);
-  if(!(L>=1&&L<=4)) return;
+  if(!(L>=1&&L<=5)) return;
   setTimeout(()=>{
     try{
       startLevel(L);
@@ -5706,8 +5991,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 9;                 /* bump: build */
-  const AKVA_VERSION = '1.7.0';         /* bump: version */
+  const AKVA_BUILD = 10;                 /* bump: build */
+  const AKVA_VERSION = '1.8.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
