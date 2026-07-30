@@ -12,13 +12,12 @@
    ========================================================================== */
 'use strict';
 
-const CACHE = 'akva-shell-v1';
+const CACHE = 'akva-shell-v2';
 const META_KEY = '/__akva_meta__';
 const NET_TIMEOUT = 4000;
 
 /* файлы, без которых игра не запустится офлайн */
 const SHELL = [
-  './',
   './index.html',
   './manifest.webmanifest',
   './icons/icon-192.png',
@@ -135,11 +134,10 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // главная страница игры
-  const isDoc = req.mode === 'navigate' ||
-                url.pathname.endsWith('/index.html') ||
-                url.pathname === '/' ||
-                url.pathname.endsWith('/');
+  // главная страница игры — только сам файл игры, не витрина на корне
+  // (витрина '/' и 'landing.html' не версионируются через AKVA_BUILD,
+  // им хватает обычного кеш-с-фоновым-обновлением ниже по файлу)
+  const isDoc = url.pathname.endsWith('/index.html');
   if (isDoc) {
     e.respondWith((async () => {
       const have = await cachedIndex();
