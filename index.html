@@ -2808,7 +2808,7 @@ function renderTasks(){
     const t=G.tasks[i];
     let txt=t.t;
     if(G.level===1&&i===8&&G.beastTotal) txt+=' ('+G.caught+'/'+G.beastTotal+')';
-    if(G.level===2&&i===1) txt+=' ('+WIRE.done+'/'+WIRE.n+')';
+    if(G.level===2&&i===1) txt+=' ('+GEN_WIRE.done+'/'+GEN_WIRE.n+')';
     if(G.level===4&&i===3) txt+=' ('+P4.caught+'/3)';
     html+=`<div class="task ${t.done?'done':''}"><span class="tick">${t.done?'✓':'•'}</span><span>${txt}</span></div>`;
   }
@@ -3711,7 +3711,7 @@ function doUse(){
     if(P4.scene==='dive'){ const sh=nearStunShark();
       if(sh){ catchShark4(sh); return; }
       toast('Сначала оглуши акулу кнопкой УДАР'); return; }
-    if(P4.scene==='fix'&&P4.nearGen&&!P4.fixed){ openWire(); return; }
+    if(P4.scene==='fix'&&P4.nearGen&&!P4.fixed){ openWirePuzzle(FIX_WIRE); return; }
     if(P4.scene==='sleep'&&P4.nearBed){
       SND.win();
       const d=$('dmgflash'); d.style.background='#000'; d.style.opacity=1;
@@ -3802,8 +3802,8 @@ function buildLevel2(){
   genObj=modelGenerator(); genObj.position.set(-8,0,9); world.add(genObj);
   colliders.push({x0:-9.3,x1:-6.7,z0:8.1,z1:9.9,y0:0,y1:2.6,walk:true});
   sign(-8,3.0,8.1,3,0.66,'ГЕНЕРАТОР','#123a52','#9ff0ff',Math.PI);
-  const genInter=addInter(-8,1.4,7.5,2.4,'Щит генератора',()=>openWire());
-  genInter.alive=()=>WIRE.done<WIRE.n;
+  const genInter=addInter(-8,1.4,7.5,2.4,'Щит генератора',()=>openWirePuzzle(GEN_WIRE));
+  genInter.alive=()=>GEN_WIRE.done<GEN_WIRE.n;
   // ----- ДОРОГА ЗА ВОРОТАМИ -----
   plane(0,150,13,270,0.02,new THREE.MeshLambertMaterial({color:0x4a4f52}));
   for(let i=0;i<45;i++){
@@ -5011,7 +5011,20 @@ function parkAlive(){
   P4.scene='alive'; P4.t=0; P4.said={};
 }
 
-/* ---------------- ГОЛОВОЛОМКА С ПРОВОДАМИ ---------------- */
+/* ==========================================================================
+   ДВИЖОК «РЕМОНТ» (см. docs/MASTERPLAN.md, п.4 и п.6.3)
+   Была одна головоломка на всю игру (глобальный WIRE), переиспользованная на
+   два места (генератор части 1 и щит вертолёта в акте 2) через копипаст
+   условия «если уровень 4». Теперь — фабрика независимых экземпляров:
+   у каждого своя раскладка проводов, свой счётчик и свой колбэк по готовности,
+   а общая только модальная панель (#wirePanel) — двух головоломок разом
+   игрок всё равно не решает, поэтому одного ACTIVE_WIRE достаточно.
+
+   makeWirePuzzle({n, colors, getLeds, onDone}) — создать; getLeds() каждый
+   раз вызывается заново (не запоминается на старте), потому что модель щита
+   пересоздаётся при каждом старте уровня — фиксированная ссылка бы протухла.
+   addRepairPoint(x,y,z,{label,n,getLeds,onDone,radius}) — то же самое одним
+   вызовом вместе с интерактивом «подойти и нажать ВЗЯТЬ», для новых актов. */
 const WIRE_COLORS=[
   {id:'y',c:'#ffd24d',n:'жёлтый'},
   {id:'r',c:'#e6503a',n:'красный'},
@@ -5019,43 +5032,54 @@ const WIRE_COLORS=[
   {id:'g',c:'#48c96e',n:'зелёный'},
   {id:'w',c:'#e9eff2',n:'белый'}
 ];
-const WIRE={n:5,done:0,left:[],right:[],ok:{},sel:null,open:false};
 function shuffled(a){ const b=a.slice();
   for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; }
   return b; }
-function resetWire(){
-  WIRE.done=0; WIRE.ok={}; WIRE.sel=null;
-  WIRE.left=shuffled(WIRE_COLORS);
-  do{ WIRE.right=shuffled(WIRE_COLORS); }
-  while(WIRE.right.every((c,i)=>c.id===WIRE.left[i].id));
+function makeWirePuzzle(cfg){
+  cfg=cfg||{};
+  const n=cfg.n||5;
+  return {
+    n, colors:cfg.colors||WIRE_COLORS.slice(0,n),
+    done:0, left:[], right:[], ok:{}, sel:null, open:false,
+    getLeds:cfg.getLeds||(()=>null),
+    onDone:cfg.onDone||(()=>{})
+  };
 }
+function resetWirePuzzle(w){
+  w.done=0; w.ok={}; w.sel=null;
+  w.left=shuffled(w.colors);
+  do{ w.right=shuffled(w.colors); }
+  while(w.right.every((c,i)=>c.id===w.left[i].id));
+}
+let ACTIVE_WIRE=null;   // какая головоломка сейчас в открытой панели
 function renderWire(){
+  const w=ACTIVE_WIRE; if(!w) return;
   const L=$('wireL'), R=$('wireR');
-  L.innerHTML=WIRE.left.map(c=>
-    '<div class="plug'+(WIRE.ok[c.id]?' used':'')+(WIRE.sel===c.id?' sel':'')+
+  L.innerHTML=w.left.map(c=>
+    '<div class="plug'+(w.ok[c.id]?' used':'')+(w.sel===c.id?' sel':'')+
     '" data-c="'+c.id+'" style="background:'+c.c+'"></div>').join('');
-  R.innerHTML=WIRE.right.map(c=>
-    '<div class="sock'+(WIRE.ok[c.id]?' ok':'')+'" data-c="'+c.id+'" style="color:'+c.c+
+  R.innerHTML=w.right.map(c=>
+    '<div class="sock'+(w.ok[c.id]?' ok':'')+'" data-c="'+c.id+'" style="color:'+c.c+
     '"><i style="background:'+c.c+'"></i></div>').join('');
-  $('wireCount').textContent=WIRE.done+' / '+WIRE.n;
+  $('wireCount').textContent=w.done+' / '+w.n;
   L.querySelectorAll('.plug').forEach(el=>attachPlug(el));
   R.querySelectorAll('.sock').forEach(el=>{
-    bindTap(el,()=>{ if(WIRE.sel) tryConnect(WIRE.sel,el.dataset.c); });
+    bindTap(el,()=>{ if(w.sel) tryConnect(w.sel,el.dataset.c); });
   });
 }
 function attachPlug(el){
   const cid=el.dataset.c;
   let sx=0,sy=0,moved=false,ghost=null,pid=null;
   const down=e=>{
-    if(WIRE.ok[cid]) return;
+    const w=ACTIVE_WIRE; if(!w||w.ok[cid]) return;
     if(e.cancelable) e.preventDefault();
     e.stopPropagation();
     const pt=e.touches?e.touches[0]:e;
     sx=pt.clientX; sy=pt.clientY; moved=false; pid=e.pointerId;
-    WIRE.sel=cid; renderWire();
+    w.sel=cid; renderWire();
     ghost=document.getElementById('dragGhost');
     if(!ghost){ ghost=document.createElement('div'); ghost.id='dragGhost'; document.body.appendChild(ghost); }
-    const col=WIRE_COLORS.find(c=>c.id===cid).c;
+    const col=w.colors.find(c=>c.id===cid).c;
     ghost.style.cssText='position:fixed;pointer-events:none;z-index:60;width:52px;height:44px;'+
       'border-radius:8px;background:'+col+';box-shadow:0 6px 18px rgba(0,0,0,.6);opacity:.9;display:block';
     move(e);
@@ -5083,49 +5107,71 @@ function attachPlug(el){
     const pt=(e.changedTouches&&e.changedTouches[0])||e;
     if(ghost) ghost.style.display='none';
     document.querySelectorAll('.sock').forEach(s=>s.classList.remove('hot'));
+    const w=ACTIVE_WIRE; if(!w) return;
     if(moved){
       const t=document.elementFromPoint(pt.clientX,pt.clientY);
       const sk=t&&t.closest?t.closest('.sock'):null;
       if(sk) tryConnect(cid,sk.dataset.c);
-      else { WIRE.sel=null; renderWire(); }
+      else { w.sel=null; renderWire(); }
     }
   };
   el.addEventListener('pointerdown',down,{passive:false});
   el.addEventListener('touchstart',down,{passive:false});
 }
 function tryConnect(plugId,sockId){
-  if(WIRE.ok[plugId]) return;
+  const w=ACTIVE_WIRE; if(!w||w.ok[plugId]) return;
   if(plugId===sockId){
-    WIRE.ok[plugId]=true; WIRE.done++; WIRE.sel=null; SND.plug();
-    if(genObj&&genObj.userData.leds[WIRE.done-1])
-      genObj.userData.leds[WIRE.done-1].material=new THREE.MeshBasicMaterial({color:0x4ade80});
+    w.ok[plugId]=true; w.done++; w.sel=null; SND.plug();
+    const leds=w.getLeds();
+    if(leds&&leds[w.done-1]) leds[w.done-1].material=new THREE.MeshBasicMaterial({color:0x4ade80});
     renderWire(); renderTasks();
-    if(WIRE.done>=WIRE.n) setTimeout(wireDone,420);
-  } else { SND.nope(); WIRE.sel=null; renderWire(); toast('Не тот цвет'); }
+    if(w.done>=w.n) setTimeout(()=>{ closeWire(); w.onDone(); },420);
+  } else { SND.nope(); w.sel=null; renderWire(); toast('Не тот цвет'); }
 }
-function openWire(){
+function openWirePuzzle(w){
   if(G.mode!=='play') return;
-  if(WIRE.done>=WIRE.n){ toast('Щит уже собран'); return; }
+  if(w.done>=w.n){ toast('Щит уже собран'); return; }
+  ACTIVE_WIRE=w;
   nextTask(0);
-  WIRE.open=true; G.mode='wire';
+  w.open=true; G.mode='wire';
   renderWire(); $('wirePanel').style.display='block';
 }
 function closeWire(){
-  WIRE.open=false; $('wirePanel').style.display='none';
+  if(ACTIVE_WIRE) ACTIVE_WIRE.open=false;
+  $('wirePanel').style.display='none';
   if(G.mode==='wire') G.mode='play';
 }
-function wireDone(){
-  if(G.level===4){ closeWire(); parkAlive(); return; }
-  closeWire(); nextTask(1);
-  SND.bells();
-  ceilLights.forEach(l=>l.intensity=1.4);
-  ambLight.intensity=0.9;
-  say('Пошло питание. Где-то звенит по всему двору.');
-  keyPick=addPickup(KEY_POS[0],1.05,KEY_POS[1],'item',
-    {id:'carkey',name:'Ключ от машины',ico:'🔑',halo:0.44,scale:1.25,tilt:0.5,
-     onTake(){ nextTask(2); say('Ключ. Теперь к машине.'); }});
-  toast('Из щита выпал ключ от машины');
+/* Готовый рычаг для новых актов: точка на карте, подошёл — нажал ВЗЯТЬ —
+   собрал провода — сработал onDone. Точка сама пропадает из списка целей,
+   когда собрана. */
+function addRepairPoint(x,y,z,opt){
+  opt=opt||{};
+  const w=makeWirePuzzle({n:opt.n,colors:opt.colors,getLeds:opt.getLeds,onDone:opt.onDone});
+  resetWirePuzzle(w);
+  const inter=addInter(x,y,z,opt.radius||2.4,opt.label||'Щит',()=>openWirePuzzle(w));
+  inter.alive=()=>w.done<w.n;
+  return w;
 }
+
+/* ---- два места, где ремонт уже используется по сюжету ---- */
+const GEN_WIRE=makeWirePuzzle({
+  getLeds:()=>genObj&&genObj.userData.leds,
+  onDone(){
+    nextTask(1);
+    SND.bells();
+    ceilLights.forEach(l=>l.intensity=1.4);
+    ambLight.intensity=0.9;
+    say('Пошло питание. Где-то звенит по всему двору.');
+    keyPick=addPickup(KEY_POS[0],1.05,KEY_POS[1],'item',
+      {id:'carkey',name:'Ключ от машины',ico:'🔑',halo:0.44,scale:1.25,tilt:0.5,
+       onTake(){ nextTask(2); say('Ключ. Теперь к машине.'); }});
+    toast('Из щита выпал ключ от машины');
+  }
+});
+const FIX_WIRE=makeWirePuzzle({
+  getLeds:()=>gen4&&gen4.userData.leds,     // раньше тут по ошибке был genObj — щит акта 2 не подсвечивался
+  onDone(){ parkAlive(); }
+});
 
 /* ---------------- СЦЕНКА С ПОЕЗДКОЙ ---------------- */
 const CUT={on:false,t:0,speed:0,dist:0,braked:0,gate:0,shake:0,said:{}};
@@ -5363,7 +5409,7 @@ function startLevel(n){
     ambLight.intensity=0.95; hemi.intensity=0.75; scene.fog.density=0.010;
     setSky('morning'); skyDome.visible=true; sunSprite.visible=true;
     beasts=[]; G.beastTotal=0;
-    resetWire(); keyPick=null;
+    resetWirePuzzle(GEN_WIRE); keyPick=null;
     buildLevel2(); DETAIL.build(2);
     initTasks(TASKS2);
     P.pos.set(0,0.2,-6); P.yaw=Math.PI;
@@ -5374,7 +5420,7 @@ function startLevel(n){
     P4.hasMask=false; P4.hasNet=false; P4.fixed=false; P4.heliUp=false;
     underwater4(false);
     sharks4=[]; animals4=[]; DLG.on=false; DLG.q=[];
-    resetWire();
+    resetWirePuzzle(FIX_WIRE);
     initTasks(TASKS4);
     scene4('heli');
     G.checkpoint.set(-1.4,0,1.4); G.checkpointYaw=Math.PI;
@@ -5660,8 +5706,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 8;                 /* bump: build */
-  const AKVA_VERSION = '1.6.0';         /* bump: version */
+  const AKVA_BUILD = 9;                 /* bump: build */
+  const AKVA_VERSION = '1.7.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
