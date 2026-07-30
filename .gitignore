@@ -23,3 +23,7 @@ android/app/src/main/assets/
 # сборка Windows (Electron): игра копируется скриптом, установщик — артефакт
 desktop/resources/game/
 desktop/dist-out/
+
+# локальный ключ генерации изображений (DashScope) — никогда не в git
+tools/.dashscope-key.local
+tools/gen-out/
