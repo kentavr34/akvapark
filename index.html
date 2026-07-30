@@ -5043,7 +5043,6 @@ function catchShark4(sh){
 
 /* ---- главный шагомер уровня ---- */
 function updP4(dt){
-  updDialog(dt);
   P4.t+=dt;
   const sc=P4.scene;
 
@@ -5411,6 +5410,52 @@ function addRepairPoint(x,y,z,opt){
   const inter=addInter(x,y,z,opt.radius||2.4,opt.label||'Щит',()=>openWirePuzzle(w));
   inter.alive=()=>w.done<w.n;
   return w;
+}
+
+/* ---- движок «поговори → принеси → получи» (см. docs/MASTERPLAN.md, п.4/7b) ----
+   Многошаговый квест поверх готовых кубиков: диалог (dialog()), предмет в
+   настоящем рюкзаке (addPickup/hasItem/takeItem — не отдельная невидимая
+   галочка), награда в копилку. Персонаж остаётся в мире и после сдачи
+   квеста (это его дом, а не «одноразовый спрайт») — просто говорит другое.
+   Готово насовсем через PROGRESS.hasLore(cfg.id) — тот же «альбом», что и
+   у жетонов-находок, переиспользован как флаг «квест сдан».
+   cfg: {id, npcPos:[x,z], npcYaw, npcOpt, npcLabel, itemPos:[x,y,z],
+         itemId, itemName, itemIco, askLines, reminderLines, giveLines,
+         afterLines, hint, pickupToast, doneToast, reward} */
+function addFetchQuest(cfg){
+  const npc=modelPerson(cfg.npcOpt||{});
+  npc.position.set(cfg.npcPos[0],0,cfg.npcPos[1]);
+  if(cfg.npcYaw) npc.rotation.y=cfg.npcYaw;
+  world.add(npc);
+
+  const done=()=>PROGRESS.hasLore(cfg.id);
+  let accepted=false;
+
+  addInter(cfg.npcPos[0],1.0,cfg.npcPos[1],2.2,cfg.npcLabel||'Поговорить',()=>{
+    if(DLG.on) return;
+    if(done()){
+      dialog(cfg.afterLines||[{who:'other',t:'Спасибо ещё раз за помощь.'}]);
+    } else if(hasItem(cfg.itemId)){
+      dialog(cfg.giveLines,()=>{
+        takeItem(cfg.itemId);
+        PROGRESS.addCoins(cfg.reward||0);
+        PROGRESS.foundLore(cfg.id);
+        toast(cfg.doneToast||('Спасибо! +'+(cfg.reward||0)+' монет в копилку'));
+      });
+    } else if(!accepted){
+      accepted=true;
+      dialog(cfg.askLines,()=>{ if(cfg.hint) toast(cfg.hint); });
+    } else {
+      dialog(cfg.reminderLines||[{who:'other',t:'Ну как, не нашёл ещё?'}]);
+    }
+  });
+
+  if(!done()){
+    addPickup(cfg.itemPos[0],cfg.itemPos[1],cfg.itemPos[2],'item',{
+      id:cfg.itemId, name:cfg.itemName, ico:cfg.itemIco||'📦',
+      onTake:()=>toast(cfg.pickupToast||'Отнеси обратно!')
+    });
+  }
 }
 
 /* ---- два места, где ремонт уже используется по сюжету ---- */
@@ -5945,6 +5990,7 @@ function buildLevel6(){
   addPortal(-38,0,'МЕХАНИЧЕСКОЕ СЕРДЦЕ','p3',5);
 
   buildHubQuestsWave1();
+  buildHubQuestsWave2();
 
   zone(-44,44,-44,44, 0,10, Math.PI, 'Остров');
 }
@@ -5996,6 +6042,45 @@ function buildHubQuestsWave1(){
     text:'Кривой аквапарк на альбомном листе. Внизу подпись: «Мы ещё вернёмся».'});
   addLoreToken(-21,1.0,-21,{id:'l6_note4',name:'Записка смотрителя',
     text:'«Пока горит хоть один фонарь — это ещё не конец». Похоже, он оказался прав.'});
+}
+
+/* ==========================================================================
+   АКТ 4, ЧАСТЬ B — волна 2: первый пример многошагового квеста
+   (см. docs/MASTERPLAN.md, раздел 7b). Не новая расстановка старых кубиков,
+   а первое использование движка addFetchQuest — «поговори → принеси →
+   получи» — поверх готовых dialog()/addPickup(). Тот самый смотритель,
+   которого игрок уже мог встретить в записке из волны 1 (l6_note4).
+   ========================================================================== */
+function buildHubQuestsWave2(){
+  addFetchQuest({
+    id:'l6_keeper_lantern',
+    npcPos:[28,-20], npcYaw:Math.PI*0.25,
+    npcOpt:{shirt:0x4a6a52, pants:0x33424a, hair:0xcfd3d6, skin:0xd8a06a},
+    npcLabel:'Поговорить со смотрителем',
+    itemPos:[34,0.85,-26], itemId:'oldlantern', itemName:'Старый фонарь', itemIco:'🏮',
+    reward:25,
+    askLines:[
+      {who:'other',t:'О, живая душа! Думал, тут кроме чаек никого не осталось.'},
+      {who:'me',t:'Здравствуйте. Вы тут совсем один?'},
+      {who:'other',t:'Присматриваю за парком, что от него осталось. Слушай, будь другом...'},
+      {who:'other',t:'Обронил свой старый фонарь у скал, там, где раньше рыбачил. Скучно без него по вечерам.'},
+      {who:'me',t:'Схожу поищу, раз тут недалеко.'}
+    ],
+    hint:'Отметил на карте: фонарь смотрителя у скал',
+    reminderLines:[
+      {who:'other',t:'Ну как, не видать фонаря? Он у скал, я хорошо помню то место.'}
+    ],
+    pickupToast:'Нашёлся! Отнеси смотрителю',
+    giveLines:[
+      {who:'me',t:'Вот, нашёл у скал!'},
+      {who:'other',t:'Дай-ка... Он самый. Столько лет вместе, думал — всё, потерялся.'},
+      {who:'other',t:'Держи вот, тебе пригодится больше, чем мне.'}
+    ],
+    doneToast:'Смотритель рад — +25 монет в копилку',
+    afterLines:[
+      {who:'other',t:'Спасибо ещё раз за фонарь. Заходи, если что.'}
+    ]
+  });
 }
 
 /* ==========================================================================
@@ -6251,6 +6336,7 @@ function frame(now){
     if(G.level===4) updP4(dt);
     if(G.level===6) updKart(dt,ix,iz);
     updFins(dt);
+    updDialog(dt);   // диалоги вне сюжетных кат-сцен (напр. движок addFetchQuest в хабе)
 
     // подбор монет и предметов
     for(const o of interactives){
@@ -6411,8 +6497,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 18;                 /* bump: build */
-  const AKVA_VERSION = '1.14.0';         /* bump: version */
+  const AKVA_BUILD = 19;                 /* bump: build */
+  const AKVA_VERSION = '1.15.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
