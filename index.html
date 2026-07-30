@@ -473,6 +473,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="mbtn ghost pe" id="bVoice">ГОЛОС ГЕРОЯ: ВКЛ</div>
     <div class="mbtn ghost pe" id="bDbg">ОТЛАДКА КАСАНИЙ: ВЫКЛ</div>
     <div class="mbtn ghost pe" id="bRestart">НАЧАТЬ УРОВЕНЬ ЗАНОВО</div>
+    <div class="mbtn ghost pe" id="bExitMenu">ВЫЙТИ В ГЛАВНОЕ МЕНЮ</div>
   </div>
 
   <div id="death" class="screen pe">
@@ -5409,6 +5410,14 @@ function backToMenu(){
   $('ui').classList.remove('cine'); SND.ambient(false);
   renderMenu();
 }
+/* Выход из паузы прямо в главное меню — бросить текущий забег, не дожидаясь
+   конца уровня. Прогресс уже сохраняется по ходу дела (PROGRESS), так что
+   бросить середину не страшно — просто не будет засчитан этот заход. */
+function exitToMenu(){
+  $('pause').style.display='none';
+  bigBtn(null);
+  backToMenu();
+}
 
 /* Перерисовать главное меню под сохранённый прогресс: закрытые главы —
    тускло, с замком и подсказкой что пройти; открытые и пройденные — со
@@ -5911,6 +5920,7 @@ bindTap($('garageClose'),closeGarage);
 bindTap($('bHowBack'),()=>{ $('howto').style.display='none'; $('menu').style.display='flex'; });
 bindTap($('bResume'),()=>{resume();});
 bindTap($('bRestart'),()=>{startLevel(G.level);});
+bindTap($('bExitMenu'),()=>{exitToMenu();});
 bindTap($('bRestart2'),()=>{startLevel(G.level);});
 bindTap($('bRestart3'),()=>{startLevel(G.level);});
 bindTap($('bRespawn'),()=>{respawn();});
@@ -6135,8 +6145,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 11;                 /* bump: build */
-  const AKVA_VERSION = '1.9.0';         /* bump: version */
+  const AKVA_BUILD = 12;                 /* bump: build */
+  const AKVA_VERSION = '1.9.1';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
