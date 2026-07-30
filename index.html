@@ -599,7 +599,14 @@ const PROGRESS=(function(){
   }
 
   function isDone(id){ return !!data.done[id]; }
+  /* Переключатель для тестирования, пока игра ещё строится: зашедший раз
+     с ?unlockall=1 видит все главы открытыми на этом устройстве всегда,
+     ?unlockall=0 отменяет. Обычных игроков не касается — этого параметра
+     они никогда не наберут в адресе сами. Прогресс/звёзды не подделывает,
+     только снимает замок, чтобы можно было прыгать по уровням при проверке. */
+  function setDevUnlock(v){ data.devUnlock=!!v; save(); }
   function isUnlocked(id){
+    if(data.devUnlock) return true;
     const ch=CHAPTERS.find(c=>c.id===id);
     if(!ch) return true;
     return !ch.need || isDone(ch.need);
@@ -640,7 +647,8 @@ const PROGRESS=(function(){
   function loreFound(){ return Object.keys(data.lore); }
 
   return {CHAPTERS,isDone,isUnlocked,stars,complete,addCoins,bank,owns,buy,equip,equipped,
-          hasLore,foundLore,loreFound};
+          hasLore,foundLore,loreFound,setDevUnlock,
+          get devUnlock(){ return !!data.devUnlock; }};
 })();
 
 const SENS = [0.0040,0.0055,0.0075,0.0105];
@@ -6183,6 +6191,17 @@ P.pos.set(0,0.2,-14);
   setTimeout(()=>{ try{ openGarage(); }catch(e){ console.error(e); } },250);
 })();
 
+/* Снять/вернуть замки с частей игры на время разработки: ?unlockall=1
+   один раз открывает всё на этом устройстве навсегда (пока не отменишь),
+   ?unlockall=0 возвращает как было. Обычный игрок этот параметр не наберёт
+   сам — проверять по-настоящему проходя главы всё равно нужно отдельно. */
+(function(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('unlockall')===null) return;
+  PROGRESS.setDevUnlock(q.get('unlockall')!=='0');
+  setTimeout(()=>{ try{ renderMenu(); toast(PROGRESS.devUnlock?'Все части открыты (тест)':'Замки возвращены'); }catch(e){ console.error(e); } },300);
+})();
+
 requestAnimationFrame(frame);
 
 </script>
@@ -6196,8 +6215,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 13;                 /* bump: build */
-  const AKVA_VERSION = '1.10.0';         /* bump: version */
+  const AKVA_BUILD = 14;                 /* bump: build */
+  const AKVA_VERSION = '1.10.1';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
