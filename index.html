@@ -429,7 +429,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   </div>
 
   <div id="wirePanel" class="pe">
-    <h3>ЩИТ ГЕНЕРАТОРА</h3>
+    <h3 id="wireTitle">ЩИТ ГЕНЕРАТОРА</h3>
     <div class="wsub">Перетащи провод в гнездо того же цвета. Или нажми на провод, потом на гнездо.</div>
     <div id="wireBoard"><div id="wireL"></div><div id="wireMid"></div><div id="wireR"></div></div>
     <div id="wireCount">0 / 5</div>
@@ -8999,7 +8999,7 @@ function makeWirePuzzle(cfg){
   cfg=cfg||{};
   const n=cfg.n||5;
   return {
-    n, colors:cfg.colors||WIRE_COLORS.slice(0,n),
+    n, colors:cfg.colors||WIRE_COLORS.slice(0,n), label:cfg.label||'Щит генератора',
     done:0, left:[], right:[], ok:{}, sel:null, open:false,
     getLeds:cfg.getLeds||(()=>null),
     onDone:cfg.onDone||(()=>{})
@@ -9094,6 +9094,7 @@ function openWirePuzzle(w){
   ACTIVE_WIRE=w;
   nextTask(0);
   w.open=true; G.mode='wire';
+  $('wireTitle').textContent=(w.label||'Щит генератора').toUpperCase();
   renderWire(); $('wirePanel').style.display='block';
 }
 function closeWire(){
@@ -9106,7 +9107,7 @@ function closeWire(){
    когда собрана. */
 function addRepairPoint(x,y,z,opt){
   opt=opt||{};
-  const w=makeWirePuzzle({n:opt.n,colors:opt.colors,getLeds:opt.getLeds,onDone:opt.onDone});
+  const w=makeWirePuzzle({n:opt.n,colors:opt.colors,getLeds:opt.getLeds,onDone:opt.onDone,label:opt.label});
   resetWirePuzzle(w);
   const inter=addInter(x,y,z,opt.radius||2.4,opt.label||'Щит',()=>openWirePuzzle(w));
   inter.alive=()=>w.done<w.n;
@@ -10205,8 +10206,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 25;                 /* bump: build */
-  const AKVA_VERSION = '1.19.0';         /* bump: version */
+  const AKVA_BUILD = 26;                 /* bump: build */
+  const AKVA_VERSION = '1.19.1';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
