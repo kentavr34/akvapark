@@ -4786,6 +4786,40 @@ function updDialog(dt){
   if(DLG.t<=0) nextLine();
 }
 
+/* ---- спутник-провожатый: идёт впереди по маршруту, ждёт, если игрок
+   отстал, говорит по одной реплике на каждой точке маршрута. Раньше
+   спасатель просто стоял столбом всю сцену 'park' — молча и никуда не
+   двигаясь (жалоба Кенана: «приятель стоит и тупо смотрит»). ---- */
+const NPC_GUIDE={npc:null,path:[],lines:{},wi:0,speed:2.6,waitGap:8,resumeGap:4.5,
+                  waiting:false,said:{},active:false};
+function startGuide(npc,path,lines){
+  NPC_GUIDE.npc=npc; NPC_GUIDE.path=path; NPC_GUIDE.lines=lines||{};
+  NPC_GUIDE.wi=0; NPC_GUIDE.said={}; NPC_GUIDE.waiting=false; NPC_GUIDE.active=true;
+}
+function stopGuide(){ NPC_GUIDE.active=false; }
+function updNpcGuide(dt){
+  if(!NPC_GUIDE.active||!NPC_GUIDE.npc) return;
+  const npc=NPC_GUIDE.npc, wp=NPC_GUIDE.path[NPC_GUIDE.wi];
+  if(!wp){ NPC_GUIDE.active=false; return; }
+  const gap=Math.hypot(npc.position.x-P.pos.x,npc.position.z-P.pos.z);
+  if(!NPC_GUIDE.waiting && gap>NPC_GUIDE.waitGap){
+    NPC_GUIDE.waiting=true; sayOther('Давай, я тебя подожду.');
+  } else if(NPC_GUIDE.waiting && gap<NPC_GUIDE.resumeGap){
+    NPC_GUIDE.waiting=false;
+  }
+  if(NPC_GUIDE.waiting) return;
+  const dx=wp[0]-npc.position.x, dz=wp[1]-npc.position.z, d=Math.hypot(dx,dz);
+  if(d<0.6){
+    const line=NPC_GUIDE.lines[NPC_GUIDE.wi];
+    if(line&&!NPC_GUIDE.said[NPC_GUIDE.wi]){ NPC_GUIDE.said[NPC_GUIDE.wi]=1; sayOther(line); }
+    NPC_GUIDE.wi++;
+  } else {
+    npc.position.x+=dx/d*NPC_GUIDE.speed*dt;
+    npc.position.z+=dz/d*NPC_GUIDE.speed*dt;
+    npc.rotation.y=Math.atan2(dx,dz);
+  }
+}
+
 /* ---- миры уровня 2 части 2 ---- */
 let pool4=null, gen4=null, sharks4=[], animals4=[];
 function buildHeliCabin(){
@@ -4933,6 +4967,7 @@ function buildCity(){
 function scene4(name){
   clearWorld(); P4.scene=name; P4.t=0; P4.said={};
   interactives.length=0;
+  stopGuide();   // новая сцена — старый npcRescue уже удалён clearWorld(), ссылка протухла
   bigBtn(null); $('ui').classList.remove('swim','helm');
   if(name==='heli'){
     setSky('day'); scene.fog.density=0.004;
@@ -5068,11 +5103,20 @@ function updP4(dt){
   }
 
   if(sc==='park'){
-    // 1) идём к бассейну
+    // 1) идём к бассейну — спасатель ведёт за собой, а не стоит столбом
     if(!P4.said.p1&&P4.t>1.4){ P4.said.p1=1;
-      say('Всё как было. Только тише.'); }
+      say('Всё как было. Только тише.');
+      startGuide(npcRescue,[[0,-4],[0,14],[0,29],[0,32]],{
+        0:'Идём. Я покажу дорогу.',
+        1:'Здесь раньше принимали гостей. Дальше — прямо.',
+        2:'За дверью бассейн. Осторожно — там могут быть акулы.',
+        3:'Дошли. Дальше сам — маску возьмёшь у бассейна.'
+      });
+    }
+    updNpcGuide(dt);
     const atPool=P.pos.z>34&&P.pos.z<38&&Math.abs(P.pos.x)<16;
     if(atPool&&!P4.hasMask&&!DLG.on&&!P4.said.p2){
+      stopGuide();
       P4.said.p2=1;
       dialog([
         {who:'other',t:'Держи маску. С ней дышишь под водой сколько нужно.'},
@@ -6510,8 +6554,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 21;                 /* bump: build */
-  const AKVA_VERSION = '1.15.2';         /* bump: version */
+  const AKVA_BUILD = 22;                 /* bump: build */
+  const AKVA_VERSION = '1.16.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
