@@ -421,6 +421,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="mbtn pe" id="bPart2"><span class="mbtxt">ЧАСТЬ 2 — ОКЕАН</span></div>
     <div class="mbtn pe" id="bPart2b"><span class="mbtxt">ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ</span></div>
     <div class="mbtn pe" id="bPart3"><span class="mbtxt">ЧАСТЬ 3 — МЕХАНИЧЕСКОЕ СЕРДЦЕ</span></div>
+    <div class="mbtn pe" id="bPart4"><span class="mbtxt">ЧАСТЬ 4 — ОТКРЫТЫЙ ОСТРОВ</span></div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
     <div class="mbtn ghost pe" id="bGarage">🎨 ГАРАЖ</div>
     <div id="hint">Телефон: левая половина экрана — идти (джойстик появится под пальцем), правая — крутить камеру.<br>Компьютер: WASD, мышь, Shift — бег, C — присесть, Пробел — прыжок, E — взять.</div>
@@ -572,7 +573,8 @@ const PROGRESS=(function(){
     {id:'p1',  need:null, need_label:''},
     {id:'p2',  need:'p1', need_label:'Пройди часть 1'},
     {id:'p2b', need:'p2', need_label:'Пройди «Океан»'},
-    {id:'p3',  need:'p2b', need_label:'Пройди «Спасателя»'}
+    {id:'p3',  need:'p2b', need_label:'Пройди «Спасателя»'},
+    {id:'p4a', need:'p3', need_label:'Пройди «Механическое сердце»'}
   ];
   let data=load();
 
@@ -2217,7 +2219,8 @@ const DETAIL=(function(){
     park:{x0:-22,x1:22,y0:0.3,y1:5.5,z0:-22,z1:36},
     park2:{x0:-22,x1:22,y0:0.3,y1:5.5,z0:-22,z1:36},
     city:{x0:-40,x1:40,y0:0.3,y1:8,z0:-24,z1:70},
-    5:{x0:-16,x1:16,y0:0.3,y1:3.3,z0:-6,z1:58}
+    5:{x0:-16,x1:16,y0:0.3,y1:3.3,z0:-6,z1:58},
+    6:{x0:-40,x1:40,y0:0.4,y1:5,z0:-40,z1:40}
   };
   function build(level,scene){
     reset();
@@ -2226,6 +2229,7 @@ const DETAIL=(function(){
     else if(level===3) buildL3();
     else if(level===4) buildL4(scene);
     else if(level===5) buildL5();
+    else if(level===6) buildL6();
     else buildGeneric();
     collectCeilings();
     const box=DUST_BOX[level===4?scene:level]||DUST_BOX[1];
@@ -2353,6 +2357,18 @@ const DETAIL=(function(){
     litter(-9,9,41,50,Math.floor(QUALITY.debris*0.5),0.02);
     puddle(-2,49,1.6,0.02);
     dressWater();   // подхватит waters[] с флудом насосной — даст блики на дне
+  }
+
+  /* Часть 4 «Открытый остров»: одна большая открытая площадка -44..44,
+     днём. Обходим стороной багги (около z=9-11, x -1.6..1.6) и порталы
+     (по четырём сторонам, ~z/x=±38) — там уже стоят коллайдеры. */
+  function buildL6(){
+    grassPatch(-20,-20,14,Math.floor(QUALITY.grass*0.5),0.3,0.9);
+    grassPatch(20,-20,14,Math.floor(QUALITY.grass*0.5),0.3,0.9);
+    grassPatch(-20,20,14,Math.floor(QUALITY.grass*0.5),0.3,0.9);
+    grassPatch(20,20,14,Math.floor(QUALITY.grass*0.5),0.3,0.9);
+    grassPatch(0,0,10,Math.floor(QUALITY.grass*0.2),0.2,0.6);
+    litter(-42,42,-42,42,Math.floor(QUALITY.debris*0.5),0.03);
   }
 
   function buildGeneric(){
@@ -5416,6 +5432,7 @@ function renderMenu(){
   draw('bPart2','p2','ЧАСТЬ 2 — ОКЕАН');
   draw('bPart2b','p2b','ЧАСТЬ 2, УРОВЕНЬ 2 — СПАСАТЕЛЬ');
   draw('bPart3','p3','ЧАСТЬ 3 — МЕХАНИЧЕСКОЕ СЕРДЦЕ');
+  draw('bPart4','p4a','ЧАСТЬ 4 — ОТКРЫТЫЙ ОСТРОВ');
 }
 
 /* стрелка-указатель к текущей задаче */
@@ -5612,6 +5629,114 @@ function finishLevel5(){
 }
 
 /* ==========================================================================
+   ЧАСТЬ 4 — «ОТКРЫТЫЙ ОСТРОВ» (акт 4, часть A, см. docs/MASTERPLAN.md)
+   Хаб: открытый остров днём, без жёсткой трассы — багги едет где угодно.
+   Порталы ведут в уже пройденные акты (двери в уровни, как в Banjo-Kazooie/
+   Spyro, а не бесшовное сшивание всей старой геометрии в одну карту — так
+   безопаснее для пяти уже проверенных уровней и реалистичнее по объёму
+   работы). Побочных квестов здесь ещё нет — это часть A, квесты в части B.
+   ========================================================================== */
+const TASKS6=['Прокатиться на багги по острову'];
+
+/* ---- багги: тот же джойстик, что и ходьба (joyX — руль, joyZ — газ/тормоз) ---- */
+const KART={inCar:false, pos:new THREE.Vector3(0,0,0), yaw:0, speed:0};
+let kartObj=null;
+function updKart(dt,ix,iz){
+  if(!KART.inCar) return;
+  const accel = -iz*10;                          // тот же стик, что и ходьба: вперёд/назад
+  KART.speed += accel*dt;
+  KART.speed *= Math.max(0,1-dt*0.9);           // трение/сопротивление
+  KART.speed = clamp(KART.speed,-5,13);
+  const turnRate = 1.7*Math.min(1,Math.abs(KART.speed)/3);   // на месте руль не крутит
+  KART.yaw += ix*turnRate*dt*(KART.speed<0?-1:1);
+  const nx=KART.pos.x+Math.sin(KART.yaw)*KART.speed*dt;
+  const nz=KART.pos.z+Math.cos(KART.yaw)*KART.speed*dt;
+  if(!blocked(nx,nz,0,1.1)){ KART.pos.x=nx; KART.pos.z=nz; } else KART.speed*=0.25;
+  if(kartObj){ kartObj.position.set(KART.pos.x,0,KART.pos.z); kartObj.rotation.y=KART.yaw; }
+  P.pos.x=KART.pos.x; P.pos.z=KART.pos.z; P.pos.y=0.55; P.vy=0;
+  P.yaw=KART.yaw;
+}
+function enterKart(){
+  if(KART.inCar) return;
+  KART.inCar=true; KART.yaw=P.yaw; KART.speed=0;
+  KART.pos.set(kartObj.position.x,0,kartObj.position.z);
+  bigBtn('ВЫЙТИ ИЗ БАГГИ',exitKart);
+  nextTask(0);
+  say('Заводится с полпинка. Двадцать лет простоя — и хоть бы что.');
+}
+function exitKart(){
+  if(!KART.inCar) return;
+  KART.inCar=false; KART.speed=0;
+  const ex=Math.sin(KART.yaw+Math.PI/2)*1.8, ez=Math.cos(KART.yaw+Math.PI/2)*1.8;
+  P.pos.set(KART.pos.x+ex,0.2,KART.pos.z+ez); P.vy=0;
+  bigBtn(null);
+}
+
+/* ---- портал в уже пройденный акт ---- */
+function addPortal(x,z,label,chId,targetLevel){
+  const g=new THREE.Group();
+  const postM=M.rust, plateM=M.metal;
+  for(const sx of [-1.3,1.3]){
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.16,3.0,8),postM);
+    post.position.set(sx,1.5,0); g.add(post);
+  }
+  const beam=new THREE.Mesh(new THREE.BoxGeometry(3.0,0.28,0.28),plateM);
+  beam.position.set(0,3.0,0); g.add(beam);
+  g.position.set(x,0,z); world.add(g);
+  colliders.push({x0:x-1.5,x1:x+1.5,z0:z-0.2,z1:z+0.2,y0:0,y1:3.2,walk:false});
+  sign(x,3.7,z-0.35,3.6,0.8,label,'#123a52','#9ff0ff',0);
+  addInter(x,1.3,z+1.6,2.6,label,()=>{
+    if(!PROGRESS.isUnlocked(chId)){
+      SND.lock();
+      const ch=PROGRESS.CHAPTERS.find(c=>c.id===chId);
+      toast(ch?ch.need_label:'Ещё не открыто');
+      return;
+    }
+    startLevel(targetLevel);
+  });
+}
+
+function buildLevel6(){
+  const sandM =new THREE.MeshLambertMaterial({color:0xcbb87a});
+  const rockM =new THREE.MeshLambertMaterial({color:0x6b6f6c});
+  // ---- остров: одна большая открытая площадка, без трассы — багги едет где хочет ----
+  plane(0,0,96,96,0.02,sandM);
+  for(let i=0;i<40;i++) plane(rnd(-44,44),rnd(-44,44),rnd(2,4),rnd(2,4),0.03,
+      Math.random()<0.5?M.tileWhite:M.tileBlue);          // старые плиты пробиваются сквозь песок
+  // ---- скальная кромка по периметру — держит игрока на острове без невидимых стен ----
+  for(let i=0;i<28;i++){
+    const a=i/28*6.283, r=45+rnd(-1,2);
+    const rk=new THREE.Mesh(new THREE.BoxGeometry(rnd(2.5,5),rnd(2,5),rnd(2.5,5)),rockM);
+    rk.position.set(Math.cos(a)*r,rnd(0.4,2),Math.sin(a)*r);
+    rk.rotation.y=rnd(0,6.28); world.add(rk);
+    colliders.push({x0:rk.position.x-2.4,x1:rk.position.x+2.4,
+                    z0:rk.position.z-2.4,z1:rk.position.z+2.4,y0:0,y1:4.5,walk:false});
+  }
+  // ---- море вокруг (вид, не для заплыва — на это ушли уже два акта) ----
+  const ocean=new THREE.Mesh(new THREE.PlaneGeometry(900,900),
+    new THREE.MeshLambertMaterial({color:0x1a6f86,transparent:true,opacity:0.85}));
+  ocean.rotation.x=-Math.PI/2; ocean.position.y=-0.6; world.add(ocean);
+
+  sign(0,4.2,15.6,7,1.3,'ОСТРОВ ОТКРЫТ','#0b2a3e','#7fe6ff',Math.PI);
+
+  // ---- багги: стоит у входа, ждёт водителя ----
+  // без коллайдера на месте стоянки: иначе багги, тронувшись с места, тут же
+  // упрётся в собственный «след» и не сможет выехать — сам себя блокирует
+  kartObj=modelCar(); kartObj.scale.setScalar(0.78);
+  kartObj.position.set(0,0,9); kartObj.rotation.y=Math.PI; world.add(kartObj);
+  sign(0,2.4,10.9,2.4,0.55,'БАГГИ','#123a52','#9ff0ff',Math.PI);
+  addInter(0,1.0,10.6,2.4,'Сесть в багги',()=>enterKart());
+
+  // ---- четыре портала в уже пройденные главы ----
+  addPortal(0,-38,'ЧАСТЬ 1 — ВХОД','p1',1);
+  addPortal(38,0,'ЧАСТЬ 2 — ОКЕАН','p2',3);
+  addPortal(0,38,'СПАСАТЕЛЬ','p2b',4);
+  addPortal(-38,0,'МЕХАНИЧЕСКОЕ СЕРДЦЕ','p3',5);
+
+  zone(-44,44,-44,44, 0,10, Math.PI, 'Остров');
+}
+
+/* ==========================================================================
    МЕНЮ / ЖИЗНЕННЫЙ ЦИКЛ
    ========================================================================== */
 function pause(){ if(G.mode!=='play') return; voiceStop(); G.mode='pause'; $('pause').style.display='flex';
@@ -5644,6 +5769,7 @@ function clearWorld(){
   colliders.length=0; holes.length=0; waters.length=0;
   interactives.length=0; pickups.length=0; zones.length=0; fins.length=0;
   plankBridge=null; beasts=[]; guardians=[];
+  kartObj=null; KART.inCar=false; KART.speed=0;
   DETAIL.reset();
 }
 function startLevel(n){
@@ -5713,6 +5839,21 @@ function startLevel(n){
     G.hasLamp=true; G.battery=100;      // фонарь уже с собой — без него тут никак
     P.pos.set(0,0.2,-2); P.yaw=Math.PI;
     G.checkpoint.set(0,0,-2); G.checkpointYaw=Math.PI;
+  } else if(G.level===6){
+    ambLight.intensity=0.95; hemi.intensity=0.85; scene.fog.density=0.004;
+    scene.fog.color.set(0x6d97a8); renderer.setClearColor(0x0a2434);
+    setSky('day'); skyDome.visible=true; sunSprite.visible=true;
+    beasts=[]; G.beastTotal=0; guardians=[];
+    KART.inCar=false; KART.speed=0;
+    buildLevel6(); DETAIL.build(6);
+    initTasks(TASKS6);
+    G.hasLamp=false;
+    P.pos.set(0,0.2,14); P.yaw=Math.PI;
+    G.checkpoint.set(0,0,14); G.checkpointYaw=Math.PI;
+    $('ui').classList.remove('swim','helm');
+    $('helm').style.display='none'; $('airBar').style.display='none';
+    bigBtn(null);
+    PROGRESS.complete('p4a',{});
   } else if(G.level===3){
     ambLight.intensity=0.85; hemi.intensity=0.8; scene.fog.density=0.006;
     scene.fog.color.set(0x6d97a8); renderer.setClearColor(0x0a2434);
@@ -5751,6 +5892,7 @@ bindTap($('bigBtn'),()=>{ if(P2.bigFn) P2.bigFn(); });
 bindTap($('bPart2'),()=>{ SND.init(); voicePrime(); startLevel(3); });
 bindTap($('bPart2b'),()=>{ SND.init(); voicePrime(); startLevel(4); });
 bindTap($('bPart3'),()=>{ SND.init(); voicePrime(); startLevel(5); });
+bindTap($('bPart4'),()=>{ SND.init(); voicePrime(); startLevel(6); });
 (function(){
   const hold=(id,key)=>{
     const el=$(id); if(!el) return;
@@ -5836,13 +5978,15 @@ function frame(now){
     if(keys['a']||keys['ф']||keys['arrowleft']) ix-=1;
     if(keys['d']||keys['в']||keys['arrowright']) ix+=1;
     const noWalk=(G.level===3&&(P2.phase==='swim'||P2.phase==='sail'))
-              || (G.level===4&&(P4.scene==='dive'||P4.scene==='fix'));
+              || (G.level===4&&(P4.scene==='dive'||P4.scene==='fix'))
+              || (G.level===6&&KART.inCar);
     if(!noWalk) movePlayer(dt,ix,iz);
     updBeasts(dt);
     updGuardians(dt);
     updHeat(dt);
     if(G.level===3) updP2(dt);
     if(G.level===4) updP4(dt);
+    if(G.level===6) updKart(dt,ix,iz);
     updFins(dt);
 
     // подбор монет и предметов
@@ -5953,7 +6097,7 @@ P.pos.set(0,0.2,-14);
 (function(){
   const q=new URLSearchParams(location.search);
   const L=parseInt(q.get('level'),10);
-  if(!(L>=1&&L<=5)) return;
+  if(!(L>=1&&L<=6)) return;
   setTimeout(()=>{
     try{
       startLevel(L);
@@ -5991,8 +6135,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 10;                 /* bump: build */
-  const AKVA_VERSION = '1.8.0';         /* bump: version */
+  const AKVA_BUILD = 11;                 /* bump: build */
+  const AKVA_VERSION = '1.9.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
