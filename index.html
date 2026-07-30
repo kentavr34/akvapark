@@ -5742,7 +5742,58 @@ function buildLevel6(){
   addPortal(0,38,'СПАСАТЕЛЬ','p2b',4);
   addPortal(-38,0,'МЕХАНИЧЕСКОЕ СЕРДЦЕ','p3',5);
 
+  buildHubQuestsWave1();
+
   zone(-44,44,-44,44, 0,10, Math.PI, 'Остров');
+}
+
+/* ==========================================================================
+   АКТ 4, ЧАСТЬ B — волна 1 побочных квестов
+   Всё на готовых движках из библиотеки квестов (см. docs/MASTERPLAN.md,
+   раздел 4) — новых механик здесь нет, только расстановка контента.
+   Награда сверх обычной (монеты забега/открытие щита) — бонус в копилку
+   (PROGRESS.addCoins), потому что хаб не «проходится» с нуля, а сохранённая
+   выгода от находки должна остаться и после выхода в меню.
+   ========================================================================== */
+function buildHubQuestsWave1(){
+  // ---- спасение: одичавшие питомцы, потеряшки — тон мягче, чем в актах 0/3 ----
+  const petSpots=[
+    {name:'Заблудившийся щенок', start:[16,16], color:0x8a6a45, dark:0x5c4529, eye:0xffcf7a},
+    {name:'Дикая коза',          start:[-16,16], color:0x9a9186, dark:0x625b52, eye:0xffe066},
+    {name:'Ручной енот',         start:[16,-16], color:0x556058, dark:0x2e352f, eye:0xbfe066},
+    {name:'Пугливый лис',        start:[-16,-16], color:0xb3612f, dark:0x6e3a1c, eye:0xffcf7a},
+    {name:'Отбившийся котёнок',  start:[0,-22], color:0xc8c0a8, dark:0x8a8270, eye:0x7ee0ff}
+  ];
+  for(const p of petSpots){
+    addRescueBeast({
+      name:p.name, start:p.start, color:p.color, dark:p.dark, eye:p.eye,
+      area:[p.start[0]-9,p.start[0]+9,p.start[1]-9,p.start[1]+9],
+      dmg:8, spPatrol:1.3, spChase:3.4,           // мягче, чем в актах 0/3 — это не хоррор-эпизод
+      onCaught:()=>{ PROGRESS.addCoins(5); toast(p.name+' спасён(а) — +5 монет в копилку'); }
+    });
+  }
+
+  // ---- ремонт: мелкая инфраструктура острова, три точки ----
+  const fixSpots=[[25,4,'Уличный фонарь'],[-25,-4,'Насос полива'],[4,25,'Громкая связь']];
+  for(const [fx,fz,label] of fixSpots){
+    const panel=modelGenerator(); panel.scale.setScalar(0.6);
+    panel.position.set(fx,0,fz); panel.rotation.y=rnd(0,6.28); world.add(panel);
+    addRepairPoint(fx,1.0,fz+1.8,{
+      label, n:4, radius:2.4,
+      getLeds:()=>panel.userData.leds,
+      onDone:()=>{ PROGRESS.addCoins(15); toast(label+' починен(а) — +15 монет в копилку'); }
+    });
+  }
+
+  // ---- жетоны: остров оживает, короткие заметки без кат-сцен ----
+  addLoreToken(10,1.0,-9,{id:'l6_note1',name:'Открытка с острова',
+    text:'«Если вернёшься — здесь всё ещё красиво». Кто-то не успел отправить.'});
+  addLoreToken(-9,1.0,10,{id:'l6_note2',name:'Билет в парк',
+    text:'Старый входной билет. Дата — за неделю до закрытия.'});
+  addLoreToken(21,1.0,21,{id:'l6_note3',name:'Детский рисунок',
+    text:'Кривой аквапарк на альбомном листе. Внизу подпись: «Мы ещё вернёмся».'});
+  addLoreToken(-21,1.0,-21,{id:'l6_note4',name:'Записка смотрителя',
+    text:'«Пока горит хоть один фонарь — это ещё не конец». Похоже, он оказался прав.'});
 }
 
 /* ==========================================================================
@@ -6145,8 +6196,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 12;                 /* bump: build */
-  const AKVA_VERSION = '1.9.1';         /* bump: version */
+  const AKVA_BUILD = 13;                 /* bump: build */
+  const AKVA_VERSION = '1.10.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
