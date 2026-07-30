@@ -21,7 +21,8 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
 
 #ui{position:fixed;inset:0;pointer-events:none;z-index:10}
 #ui.cine #stick,#ui.cine #btns,#ui.cine #hotbar,#ui.cine #topbar,
-#ui.cine #cross,#ui.cine #compass,#ui.cine #prompt,#ui.cine #toast,#ui.cine #helm{display:none!important}
+#ui.cine #cross,#ui.cine #compass,#ui.cine #prompt,#ui.cine #toast,#ui.cine #helm,
+#ui.cine #minimap{display:none!important}
 /* Под водой прячем только то, что там бессмысленно (рюкзак, бег, присед,
    прыжок, фонарь и полосу предметов). Кнопки действия «ВЗЯТЬ» и «УДАР»
    ОСТАЮТСЯ — ими ловят и оглушают акул; без них уровень было не пройти. */
@@ -73,6 +74,22 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   padding:7px 14px;font-size:13px;font-weight:600;white-space:nowrap;display:none;
   text-shadow:0 1px 3px #000}
 #prompt b{color:#7fe6ff}
+
+/* ---------- МИНИ-КАРТА ----------
+   Радар в углу: точка игрока в центре, вокруг — ближайшие интерактивы
+   и порталы. Не полноэкранная карта — мир пока не настолько большой,
+   чтобы в ней была нужда; радар читается быстрее с одного взгляда. */
+/* Верхний левый угол, а не нижний: там же джойстик, и на маленьких экранах
+   круги начинают перекрываться. Под полосками HP/выносливости места хватает. */
+#minimap{position:absolute;left:10px;top:calc(env(safe-area-inset-top) + 66px);
+  width:96px;height:96px;border-radius:50%;overflow:hidden;
+  border:2px solid rgba(140,220,255,.55);background:rgba(4,18,28,.6);
+  box-shadow:0 6px 18px rgba(0,0,0,.5);display:none}
+/* Глобальное правило canvas{position:fixed;inset:0;...} выше рассчитано на
+   основной WebGL-канвас и иначе распространится на ЛЮБОЙ canvas на странице —
+   без явного сброса тут канвас мини-карты растянется на весь экран (его
+   containing block станет viewport, а не div 112x112). */
+#minimap canvas{position:relative;inset:auto;width:100%;height:100%;display:block}
 #subtitle{position:absolute;left:50%;bottom:36%;transform:translateX(-50%);width:80%;max-width:520px;
   text-align:center;font-size:14px;line-height:1.4;color:#eaf8ff;text-shadow:0 2px 6px #000,0 0 12px #000;
   display:none}
@@ -344,6 +361,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   <div id="compass"><i></i><b></b></div>
   <div id="cross"></div>
   <div id="prompt"></div>
+  <div id="minimap"><canvas width="96" height="96"></canvas></div>
   <div id="subtitle"></div>
   <div id="toast"></div>
 
@@ -5416,6 +5434,8 @@ function backToMenu(){
   SND.music(false); SND.drive(false);
   G.mode='menu'; $('menu').style.display='flex';
   $('ui').classList.remove('cine'); SND.ambient(false);
+  $('minimap').style.display='none';   // updMinimap() сам себя выключает
+                                        // только внутри режима 'play' — тут добиваем на всякий
   renderMenu();
 }
 /* Выход из паузы прямо в главное меню — бросить текущий забег, не дожидаясь
@@ -5481,6 +5501,69 @@ function updCompass(){
   const a=P.yaw-Math.atan2(-dx,-dz);
   el.querySelector('i').style.transform='rotate('+(a*180/Math.PI)+'deg)';
   el.querySelector('b').textContent=Math.round(dist)+' м';
+}
+
+/* ==========================================================================
+   МИНИ-КАРТА (см. docs/MASTERPLAN.md, раздел 7a)
+   Радар в углу экрана: центр — игрок, вокруг — ближайшие интерактивы
+   (жетоны/щиты/порталы/багги) и живые существа (звери/сторож), в радиусе
+   MINIMAP_R метров. Карта не вращается (север всегда «вверх») — вращается
+   только треугольник игрока, это проще читать с одного взгляда, чем
+   постоянно крутящийся мир. Свои и чужие координаты кладутся в одну и ту
+   же формулу (dx,dz)->(cx+dx*scale,cy+dz*scale), поэтому треугольник и
+   метки всегда согласованы друг с другом без лишней тригонометрии.
+   ========================================================================== */
+const MINIMAP_R=32;
+function minimapPlot(ctx,cx,cy,scale,dx,dz,color,size,shape){
+  const d=Math.hypot(dx,dz);
+  if(d>MINIMAP_R) return;
+  const x=cx+dx*scale, y=cy+dz*scale;
+  ctx.fillStyle=color;
+  if(shape==='diamond'){
+    ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI/4);
+    ctx.fillRect(-size/2,-size/2,size,size); ctx.restore();
+  } else if(shape==='square'){
+    ctx.fillRect(x-size/2,y-size/2,size,size);
+  } else {
+    ctx.beginPath(); ctx.arc(x,y,size/2,0,6.29); ctx.fill();
+  }
+}
+const PORTAL_LABELS=['ЧАСТЬ 1 — ВХОД','ЧАСТЬ 2 — ОКЕАН','СПАСАТЕЛЬ','МЕХАНИЧЕСКОЕ СЕРДЦЕ'];
+const REPAIR_LABELS=['Щит освещения','Щит вентиляции','Щит насосной','Уличный фонарь','Насос полива','Громкая связь'];
+function updMinimap(){
+  const wrap=$('minimap');
+  const show=(G.mode==='play');
+  wrap.style.display=show?'block':'none';
+  if(!show) return;
+  const cv=wrap.querySelector('canvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,cx=W/2,cy=H/2,R=cx-3;
+  ctx.clearRect(0,0,W,H);
+  const scale=R/MINIMAP_R;
+
+  for(const b of beasts){ if(b.state==='caught') continue;
+    minimapPlot(ctx,cx,cy,scale,b.pos.x-P.pos.x,b.pos.z-P.pos.z,'#ff5a4a',6,'dot'); }
+  for(const g of guardians)
+    minimapPlot(ctx,cx,cy,scale,g.pos.x-P.pos.x,g.pos.z-P.pos.z,'#ff2a2a',7,'dot');
+
+  for(const it of interactives){
+    if(!it.label||(it.alive&&!it.alive())) continue;
+    const dx=it.pos.x-P.pos.x, dz=it.pos.z-P.pos.z;
+    if(it.label.indexOf('Жетон')===0) minimapPlot(ctx,cx,cy,scale,dx,dz,'#c9a0ff',6,'dot');
+    else if(PORTAL_LABELS.indexOf(it.label)>=0) minimapPlot(ctx,cx,cy,scale,dx,dz,'#7fe6ff',8,'diamond');
+    else if(it.label==='Сесть в багги') minimapPlot(ctx,cx,cy,scale,dx,dz,'#ffb347',7,'square');
+    else if(REPAIR_LABELS.indexOf(it.label)>=0) minimapPlot(ctx,cx,cy,scale,dx,dz,'#ffe066',6,'square');
+  }
+
+  // игрок — треугольник, направление строится из того же вектора «вперёд»,
+  // что и движение (fx,fz), без отдельной формулы поворота для канваса
+  const fx=-Math.sin(P.yaw), fz=-Math.cos(P.yaw);
+  const px=-fz, pz=fx;                              // перпендикуляр вправо
+  const tip=[cx+fx*9, cy+fz*9];
+  const bl=[cx-fx*6+px*5, cy-fz*6+pz*5];
+  const br=[cx-fx*6-px*5, cy-fz*6-pz*5];
+  ctx.fillStyle='#eaf8ff';
+  ctx.beginPath(); ctx.moveTo(tip[0],tip[1]); ctx.lineTo(bl[0],bl[1]); ctx.lineTo(br[0],br[1]); ctx.closePath(); ctx.fill();
 }
 
 /* ==========================================================================
@@ -6100,7 +6183,7 @@ function frame(now){
     if(G.hasLamp) updHUD();
 
     // стрелка к текущей цели
-    updCompass(); updDbg();
+    updCompass(); updDbg(); updMinimap();
 
     // случайные капли
     dripT-=dt;
@@ -6215,8 +6298,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 14;                 /* bump: build */
-  const AKVA_VERSION = '1.10.1';         /* bump: version */
+  const AKVA_BUILD = 15;                 /* bump: build */
+  const AKVA_VERSION = '1.11.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
