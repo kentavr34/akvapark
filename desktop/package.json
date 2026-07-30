@@ -1,0 +1,42 @@
+{
+  "name": "akvapark-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Заброшенный аквапарк — Windows-обёртка (Electron)",
+  "main": "main.js",
+  "scripts": {
+    "prebuild:sync": "node sync-game.mjs",
+    "start": "npm run prebuild:sync && electron .",
+    "dist": "npm run prebuild:sync && electron-builder --win"
+  },
+  "build": {
+    "appId": "io.akvapark.desktop",
+    "productName": "Заброшенный аквапарк",
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "updater.js"
+    ],
+    "extraResources": [
+      { "from": "resources/game", "to": "game" }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build-assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "directories": {
+      "output": "dist-out"
+    }
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}

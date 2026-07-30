@@ -19,3 +19,7 @@ dist/
 
 # игра копируется в assets скриптом сборки
 android/app/src/main/assets/
+
+# сборка Windows (Electron): игра копируется скриптом, установщик — артефакт
+desktop/resources/game/
+desktop/dist-out/
