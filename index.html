@@ -207,8 +207,13 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
 
 /* ---------- ЭКРАНЫ ---------- */
 .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
-  justify-content:center;text-align:center;padding:24px;
+  justify-content:center;text-align:center;padding:24px;overflow-y:auto;
   background:radial-gradient(ellipse at 50% 40%,#0b3550 0%,#03111c 70%)}
+/* «Управление» — самый длинный экран в игре: центрирование ломает скролл
+   на телефонах (верх текста и кнопка «Назад» уезжают за край и становятся
+   недостижимы). Тут контент идёт сверху вниз, с явным отступом снизу. */
+#howto{justify-content:flex-start;padding-top:max(28px,env(safe-area-inset-top));
+  padding-bottom:40px}
 .screen h1{font-size:clamp(26px,7vw,46px);font-weight:900;letter-spacing:2px;line-height:1.05;
   background:linear-gradient(180deg,#bff0ff,#3aa8dd 60%,#1c6d95);-webkit-background-clip:text;
   background-clip:text;color:transparent;text-shadow:0 6px 30px rgba(0,140,200,.35);margin-bottom:6px}
@@ -234,7 +239,6 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
 #death h2{color:#ff8f8f}
 #win{display:none;background:radial-gradient(ellipse at 50% 40%,#0d4a3a 0%,#03130f 70%)}
 #win h2{color:#7dffcf}
-#hint{font-size:11px;color:#6d94a8;margin-top:18px;line-height:1.5;max-width:400px}
 #wirePanel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   width:min(94vw,470px);background:rgba(6,26,40,.97);border:1px solid rgba(120,220,255,.45);
   border-radius:14px;padding:14px;display:none;box-shadow:0 20px 60px rgba(0,0,0,.75);z-index:30}
@@ -454,14 +458,13 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="mbtn pe" id="bPart4"><span class="mbtxt">ЧАСТЬ 4 — ОТКРЫТЫЙ ОСТРОВ</span></div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
     <div class="mbtn ghost pe" id="bGarage">🎨 ГАРАЖ</div>
-    <div id="hint">Телефон: левая половина экрана — идти (джойстик появится под пальцем), правая — крутить камеру.<br>Компьютер: WASD, мышь, Shift — бег, C — присесть, Пробел — прыжок, E — взять.</div>
     <a id="apkbtn" class="mbtn ghost pe" href="./akvapark.apk" style="display:none">СКАЧАТЬ ДЛЯ ANDROID</a>
     <div id="verline">версия <span id="verNum">—</span> <span id="verState"></span></div>
   </div>
 
   <div id="howto" class="screen pe" style="display:none">
     <h2>УПРАВЛЕНИЕ</h2>
-    <div style="text-align:left;font-size:13px;line-height:1.75;color:#bcdff0;max-width:420px">
+    <div style="text-align:left;font-size:14.5px;line-height:1.8;color:#bcdff0;max-width:420px;width:100%">
       <b style="color:#7fd8ff">Телефон</b><br>
       • <b>Левая половина экрана</b> — ходьба. Джойстик появляется там, куда поставил палец: вверх — вперёд, вниз — назад, вбок — вбок<br>
       • <b>Правая половина экрана</b> — камера. Веди пальцем в любую сторону, смотри куда хочешь<br>
@@ -684,17 +687,14 @@ const PROGRESS=(function(){
   }
 
   function isDone(id){ return !!data.done[id]; }
-  /* Переключатель для тестирования, пока игра ещё строится: зашедший раз
-     с ?unlockall=1 видит все главы открытыми на этом устройстве всегда,
-     ?unlockall=0 отменяет. Обычных игроков не касается — этого параметра
-     они никогда не наберут в адресе сами. Прогресс/звёзды не подделывает,
-     только снимает замок, чтобы можно было прыгать по уровням при проверке. */
   function setDevUnlock(v){ data.devUnlock=!!v; save(); }
+  /* Кенан решил: все части открыты всем игрокам сразу, без прохождения
+     по порядку — играй любую часть в любом порядке. Звёзды/копилка
+     считаются как раньше (см. complete()), просто больше нет замка.
+     CHAPTERS/need оставлены на будущее — если понадобится вернуть
+     прогрессию, менять нужно только эту функцию. */
   function isUnlocked(id){
-    if(data.devUnlock) return true;
-    const ch=CHAPTERS.find(c=>c.id===id);
-    if(!ch) return true;
-    return !ch.need || isDone(ch.need);
+    return true;
   }
   /* Звёзды — понятная детям метрика повторного прохождения: 1 за само
      прохождение, ещё по одной за собранные монеты и за скорость. Пороги
@@ -6554,8 +6554,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 22;                 /* bump: build */
-  const AKVA_VERSION = '1.16.0';         /* bump: version */
+  const AKVA_BUILD = 23;                 /* bump: build */
+  const AKVA_VERSION = '1.17.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
