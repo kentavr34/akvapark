@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Заброшенный аквапарк</title>
+<meta name="description" content="Приключенческая 3D-игра: заброшенный аквапарк, океан и спасательная миссия. Играйте в браузере или установите на телефон/компьютер.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png">
+<meta name="theme-color" content="#04121c">
+<style>
+  :root{color-scheme:dark;}
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #0f3a4a 0%, transparent 60%),
+      linear-gradient(180deg,#04121c 0%,#061a26 55%,#031015 100%);
+    color:#e8f6fb;
+    display:flex; flex-direction:column; align-items:center;
+    padding:32px 16px 48px;
+  }
+  .wrap{width:100%; max-width:720px;}
+  header{text-align:center; margin-bottom:28px;}
+  .logo{
+    width:88px; height:88px; border-radius:22px; margin:0 auto 16px;
+    display:block; box-shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+  h1{font-size:clamp(24px,5vw,36px); margin:0 0 8px; letter-spacing:.2px;}
+  .tag{color:#8fc4d6; font-size:15px; line-height:1.5; margin:0 auto; max-width:520px;}
+  .cards{display:flex; flex-direction:column; gap:14px; margin-top:28px;}
+  .card{
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(127,216,255,.16);
+    border-radius:16px; padding:18px 20px;
+    display:flex; align-items:center; gap:16px;
+  }
+  .card .icon{
+    width:46px; height:46px; flex:0 0 auto; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:22px;
+    background:rgba(127,216,255,.12);
+  }
+  .card .body{flex:1; min-width:0;}
+  .card h2{font-size:17px; margin:0 0 4px;}
+  .card p{margin:0; font-size:13px; color:#9db9c4; line-height:1.4;}
+  .btn{
+    appearance:none; border:none; cursor:pointer; text-decoration:none;
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:11px 18px; border-radius:11px; font-size:14px; font-weight:600;
+    white-space:nowrap; flex:0 0 auto; transition:transform .12s, filter .12s;
+  }
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:linear-gradient(180deg,#3fd0ff,#1aa6d8); color:#04121c;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{background:rgba(255,255,255,.08); color:#cfeaf3; border:1px solid rgba(255,255,255,.14);}
+  .btn-ghost:hover{filter:brightness(1.15);}
+  .btn[disabled], .btn.soon{background:rgba(255,255,255,.05); color:#5f7a83; cursor:default; border:1px solid rgba(255,255,255,.08);}
+  .row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .sub{font-size:12px; color:#7ea3af;}
+  footer{margin-top:36px; text-align:center; font-size:12px; color:#5f7f8c;}
+  footer a{color:#7fd8ff; text-decoration:none;}
+  @media (max-width:480px){
+    .card{flex-direction:column; align-items:flex-start;}
+    .card .row{width:100%;}
+    .btn{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img class="logo" src="./icons/icon-192.png" alt="">
+    <h1>Заброшенный аквапарк</h1>
+    <p class="tag">3D-приключение: спаси обитателей заброшенного аквапарка, почини механизмы
+      и раскрой тайну острова. Для игроков 7–15 лет — без жестокости, только спасение и загадки.</p>
+  </header>
+
+  <div class="cards">
+    <div class="card">
+      <div class="icon">🌐</div>
+      <div class="body">
+        <h2>Играть в браузере</h2>
+        <p>Ничего не устанавливать — откроется прямо здесь, прогресс сохраняется на устройстве.</p>
+      </div>
+      <a class="btn btn-primary" href="./index.html">ИГРАТЬ</a>
+    </div>
+
+    <div class="card">
+      <div class="icon">📱</div>
+      <div class="body">
+        <h2>Скачать для Android</h2>
+        <p class="sub" id="apkInfo">проверяю версию…</p>
+      </div>
+      <a class="btn btn-ghost" id="apkBtn" href="./akvapark.apk">СКАЧАТЬ APK</a>
+    </div>
+
+    <div class="card">
+      <div class="icon">🖥️</div>
+      <div class="body">
+        <h2>Скачать для Windows</h2>
+        <p class="sub">Установщик с автообновлением — в разработке.</p>
+      </div>
+      <button class="btn soon" disabled>СКОРО</button>
+    </div>
+  </div>
+
+  <footer>После установки игра обновляется сама при запуске, если есть интернет.
+    <br><a href="./index.html">akvapark.45.67.216.36.sslip.io</a></footer>
+</div>
+
+<script>
+(async function(){
+  const info = document.getElementById('apkInfo');
+  const btn = document.getElementById('apkBtn');
+  try{
+    const r = await fetch('./apk.json?ts=' + Date.now(), { cache: 'no-store' });
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    info.textContent = (j.version ? 'версия ' + j.version + ' · ' : '') +
+                        Math.round((j.size||0)/1048576) + ' МБ';
+  }catch(_){
+    info.textContent = 'apk ещё не собран';
+    btn.setAttribute('disabled','');
+    btn.classList.add('soon');
+    btn.removeAttribute('href');
+  }
+})();
+</script>
+</body>
+</html>

@@ -67,6 +67,7 @@ fi
 # --- выкладка: сначала файлы игры, version.json последним ---
 STAGE=$(mktemp -d "$BASE/.stage.XXXXXX")
 cp -a "$REPO/index.html" "$REPO/sw.js" "$REPO/manifest.webmanifest" "$STAGE/"
+[ -f "$REPO/landing.html" ] && cp -a "$REPO/landing.html" "$STAGE/"
 cp -a "$REPO/icons" "$STAGE/icons"
 cp -a "$REPO/version.json" "$STAGE/version.json.new"
 
@@ -74,6 +75,7 @@ mkdir -p "$WWW/icons"
 mv -f "$STAGE/index.html"          "$WWW/index.html"
 mv -f "$STAGE/sw.js"               "$WWW/sw.js"
 mv -f "$STAGE/manifest.webmanifest" "$WWW/manifest.webmanifest"
+[ -f "$STAGE/landing.html" ] && mv -f "$STAGE/landing.html" "$WWW/landing.html"
 cp -a "$STAGE/icons/." "$WWW/icons/"
 mv -f "$STAGE/version.json.new"    "$WWW/version.json"   # сигнал «игра обновилась»
 rm -rf "$STAGE"
