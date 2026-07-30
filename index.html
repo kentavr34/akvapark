@@ -1140,6 +1140,21 @@ function modelMedkit(){
   h.rotation.x=Math.PI/2; h.position.y=0.13; g.add(h);
   return g;
 }
+/* ---- ЭНЕРГЕТИК ---- */
+function modelEnergy(){
+  const g=new THREE.Group();
+  const can=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.16,12),
+    new THREE.MeshPhongMaterial({color:0x3fb0a0,shininess:70}));
+  g.add(can);
+  const label=new THREE.Mesh(new THREE.CylinderGeometry(0.0455,0.0455,0.07,12),
+    new THREE.MeshBasicMaterial({color:0xffd23c}));
+  g.add(label);
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(0.042,0.045,0.015,12),IM.steelD);
+  top.position.y=0.0875; g.add(top);
+  const tab=new THREE.Mesh(new THREE.TorusGeometry(0.012,0.004,4,8),IM.steelD);
+  tab.rotation.x=Math.PI/2; tab.position.set(0.01,0.096,0); g.add(tab);
+  return g;
+}
 /* ---- САЧОК ---- */
 function modelNet(){
   const g=new THREE.Group();
@@ -1226,6 +1241,7 @@ function modelCar(){
   // выхлоп
   const ex=new THREE.Mesh(new THREE.CylinderGeometry(0.07,0.07,0.30,8),chrome);
   ex.rotation.x=Math.PI/2; ex.position.set(0.65,0.42,2.28); g.add(ex);
+  g.userData.paint=paint; g.userData.paintD=paintD;   // для косметики багги в гараже
   return g;
 }
 /* ---- ГЕНЕРАТОР ---- */
@@ -1325,7 +1341,7 @@ function modelDash(){
 }
 const ITEM_MODEL={lamp:modelLamp,lamphead:modelLampHead,wood:modelWood,sword:modelSword,
   crowbar:modelCrowbar,keycard:modelCard,plank:modelPlank,battery:modelBattery,
-  medkit:modelMedkit,net:modelNet,carkey:modelCarKey};
+  medkit:modelMedkit,net:modelNet,carkey:modelCarKey,energy:modelEnergy};
 
 /* руки: фонарь в левой руке */
 const handLamp=modelLamp();
@@ -1373,6 +1389,14 @@ bareHand.visible=false; camera.add(bareHand);
    за реальные деньги и ничто не даёт игрового преимущества: копилка полнится
    монетами, которые игрок и так собирает по уровням (см. MASTERPLAN.md, п.6).
    ========================================================================== */
+/* Объявлена здесь (а не рядом с остальным кодом багги в части 4), потому что
+   cosmeticApply() вызывается один раз сразу при загрузке страницы, а багги
+   создаётся только внутри buildLevel6(). let, объявленный ПОЗЖЕ по тексту,
+   в момент этого раннего вызова ещё в «мёртвой зоне» — обращение к нему
+   рушит cosmeticApply() и вместе с ней обрывает вообще всю остальную
+   загрузку скрипта (VOICE и всё, что дальше, просто не успевает объявиться).
+   Проверено на практике — не гипотеза. */
+let kartObj=null;
 const COSMETIC_ITEMS=[
   {id:'lamp_warm',   cat:'lamp',   name:'Тёплый луч',      price:0,  swatch:'#fff0c0', color:0xfff0c0, lens:0xfff8d8},
   {id:'lamp_cyan',   cat:'lamp',   name:'Ледяной луч',     price:30, swatch:'#9fe8ff', color:0x9fe8ff, lens:0xd8f6ff},
@@ -1381,8 +1405,22 @@ const COSMETIC_ITEMS=[
   {id:'jacket_blue',  cat:'jacket', name:'Синяя куртка',   price:0,  swatch:'#3d6f8f', color:0x3d6f8f, cuff:0x2b5470},
   {id:'jacket_red',   cat:'jacket', name:'Красная куртка', price:30, swatch:'#8f3d3d', color:0x8f3d3d, cuff:0x702b2b},
   {id:'jacket_green', cat:'jacket', name:'Зелёная куртка', price:30, swatch:'#3d8f52', color:0x3d8f52, cuff:0x2b7038},
-  {id:'jacket_black', cat:'jacket', name:'Чёрная куртка',  price:50, swatch:'#2a2e33', color:0x2a2e33, cuff:0x1c1f22}
+  {id:'jacket_black', cat:'jacket', name:'Чёрная куртка',  price:50, swatch:'#2a2e33', color:0x2a2e33, cuff:0x1c1f22},
+  {id:'kart_red',    cat:'kart', name:'Красная багги',    price:0,  swatch:'#b23a2e', color:0xb23a2e, dark:0x7d2820},
+  {id:'kart_yellow', cat:'kart', name:'Жёлтая багги',     price:25, swatch:'#e8c23c', color:0xe8c23c, dark:0xa8862a},
+  {id:'kart_teal',   cat:'kart', name:'Бирюзовая багги',  price:25, swatch:'#2f9f9a', color:0x2f9f9a, dark:0x1f6f6a},
+  {id:'kart_purple', cat:'kart', name:'Фиолетовая багги', price:45, swatch:'#8a4fc0', color:0x8a4fc0, dark:0x5e3585}
 ];
+/* Косметика багги применяется только если машина в мире СЕЙЧАС — это хаб,
+   у истории (уровни 2/3) свои экземпляры modelCar() и свой цвет, гараж их
+   не трогает (buildLevel6() зовёт applyKartColor() сама после создания). */
+function applyKartColor(){
+  if(!kartObj||!kartObj.userData.paint) return;
+  const kartId=PROGRESS.equipped('kart','kart_red');
+  const it=COSMETIC_ITEMS.find(i=>i.id===kartId)||COSMETIC_ITEMS.find(i=>i.cat==='kart');
+  kartObj.userData.paint.color.set(it.color);
+  kartObj.userData.paintD.color.set(it.dark);
+}
 function cosmeticApply(){
   const lampId=PROGRESS.equipped('lamp','lamp_warm');
   const lampIt=COSMETIC_ITEMS.find(i=>i.id===lampId)||COSMETIC_ITEMS[0];
@@ -1394,6 +1432,8 @@ function cosmeticApply(){
   const jacketIt=COSMETIC_ITEMS.find(i=>i.id===jacketId)||COSMETIC_ITEMS[4];
   if(bareHand.userData.sleeve) bareHand.userData.sleeve.color.set(jacketIt.color);
   if(bareHand.userData.cuff)   bareHand.userData.cuff.color.set(jacketIt.cuff);
+
+  applyKartColor();
 }
 cosmeticApply();
 
@@ -3586,7 +3626,8 @@ function closeBag(){ $('bagPanel').style.display='none'; }
 const SHOP=[
   {id:'medkit',name:'Аптечка — восстановит 45 здоровья',ico:'🧰',price:12},
   {id:'battery',name:'Батарейка для фонаря',ico:'🔋',price:8},
-  {id:'plank',name:'Запасная доска',ico:'🪵',price:20}
+  {id:'plank',name:'Запасная доска',ico:'🪵',price:20},
+  {id:'energy',name:'Энергетик — восстановит выносливость',ico:'🥤',price:10}
 ];
 function openShop(){
   const l=$('shopList'); l.innerHTML='';
@@ -3608,7 +3649,7 @@ function closeShop(){ $('shopPanel').style.display='none'; }
 function renderGarage(){
   $('garageBank').textContent='Монет: '+PROGRESS.bank();
   const l=$('garageList'); l.innerHTML='';
-  const cats=[['lamp','ЦВЕТ ФОНАРЯ'],['jacket','ЦВЕТ КУРТКИ']];
+  const cats=[['lamp','ЦВЕТ ФОНАРЯ'],['jacket','ЦВЕТ КУРТКИ'],['kart','ЦВЕТ БАГГИ (ЧАСТЬ 4)']];
   for(const [cat,title] of cats){
     const h=document.createElement('div'); h.className='garCat'; h.textContent=title; l.appendChild(h);
     for(const it of COSMETIC_ITEMS.filter(i=>i.cat===cat)){
@@ -3891,6 +3932,9 @@ function doUse(){
     if(!G.hasLamp){ toast('Сначала нужен фонарь'); return; }
     if(G.battery>95){ toast('Батарея почти полная'); return; }
     takeItem('battery'); G.battery=100; SND.pick(); toast('Фонарь заряжен'); updHUD(); return; }
+  if(G.hand&&G.hand.id==='energy'){
+    if(G.stam>=95){ toast('Выносливость почти полная'); return; }
+    takeItem('energy'); G.stam=100; SND.pick(); toast('+выносливость'); updHUD(); return; }
   toast('Здесь нечего использовать');
 }
 
@@ -5740,7 +5784,6 @@ const TASKS6=['Прокатиться на багги по острову'];
 
 /* ---- багги: тот же джойстик, что и ходьба (joyX — руль, joyZ — газ/тормоз) ---- */
 const KART={inCar:false, pos:new THREE.Vector3(0,0,0), yaw:0, speed:0};
-let kartObj=null;
 function updKart(dt,ix,iz){
   if(!KART.inCar) return;
   const accel = -iz*10;                          // тот же стик, что и ходьба: вперёд/назад
@@ -5824,6 +5867,7 @@ function buildLevel6(){
   // упрётся в собственный «след» и не сможет выехать — сам себя блокирует
   kartObj=modelCar(); kartObj.scale.setScalar(0.78);
   kartObj.position.set(0,0,9); kartObj.rotation.y=Math.PI; world.add(kartObj);
+  applyKartColor();   // цвет из гаража — своя покраска только у этого экземпляра
   sign(0,2.4,10.9,2.4,0.55,'БАГГИ','#123a52','#9ff0ff',Math.PI);
   addInter(0,1.0,10.6,2.4,'Сесть в багги',()=>enterKart());
 
@@ -6160,6 +6204,8 @@ function frame(now){
       pr.style.display='block'; pr.innerHTML='Применить аптечку &nbsp;<b>[ВЗЯТЬ]</b>'; }
     else if(G.hand&&G.hand.id==='battery'&&G.hasLamp&&G.battery<95){
       pr.style.display='block'; pr.innerHTML='Вставить батарейку &nbsp;<b>[ВЗЯТЬ]</b>'; }
+    else if(G.hand&&G.hand.id==='energy'&&G.stam<95){
+      pr.style.display='block'; pr.innerHTML='Выпить энергетик &nbsp;<b>[ВЗЯТЬ]</b>'; }
     else pr.style.display='none';
 
     // анимация меча
@@ -6298,8 +6344,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 15;                 /* bump: build */
-  const AKVA_VERSION = '1.11.0';         /* bump: version */
+  const AKVA_BUILD = 16;                 /* bump: build */
+  const AKVA_VERSION = '1.12.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
