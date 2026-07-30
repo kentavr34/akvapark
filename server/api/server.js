@@ -19,7 +19,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 
-const PORT = Number(process.env.AKVA_API_PORT || 8091);
+const PORT = Number(process.env.AKVA_API_PORT || 8093);
 const DATA_DIR = process.env.AKVA_API_DATA || '/opt/akvapark/data/profiles';
 const MAX_BODY = 32 * 1024;                 // с запасом: реальный профиль — единицы КБ
 const ID_RE = /^[a-f0-9]{32,64}$/;          // только hex — заодно защита от path traversal

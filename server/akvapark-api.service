@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=simple
 ExecStart=/usr/bin/node /opt/akvapark/repo/server/api/server.js
-Environment=AKVA_API_PORT=8091
+Environment=AKVA_API_PORT=8093
 Environment=AKVA_API_DATA=/opt/akvapark/data/profiles
 Restart=on-failure
 RestartSec=3
