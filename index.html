@@ -5811,9 +5811,16 @@ function buildLevel5(){
   wallX(40,-10,-2,0,4.2,wallM);
   wallX(40,2,10,0,4.2,wallM);
   sign(0,3.6,57.6,6,1.1,'НАСОСНАЯ','#123a52','#9ff0ff',Math.PI);
-  // мелкий затоп у дальней стены — насос протекал 20 лет
-  holes.push({x0:-6,x1:6,z0:51,z1:57,bottom:-0.4});
-  waters.push({x0:-6,x1:6,z0:51,z1:57,surface:0.02});
+  // мелкий затоп у дальней стены — насос протекал 20 лет.
+  // ЧИСТО декоративная лужа (без holes.push/waters.push): та регистрация
+  // включает общий механизм inWater() — «в воде что-то большое» с уроном
+  // dt*70 в секунду, задуманный для акульих зон океана. Тут никакой твари
+  // нет и не задумывалось, а лужа мелкая (0.42 юнита) — если бы её всё же
+  // зарегистрировать как воду, обычный проход через комнату наносил бы
+  // игроку смертельный урон без единой причины. Заодно и раньше тут не
+  // было вообще никакого визуала — лужа выглядела как обычный пол
+  // (см. отчёт Кенана: «не мог понять, что там вода»).
+  plane(0,54,12,6,0.03,M.water);
   const panelPump=modelGenerator();
   panelPump.position.set(-6,0,44); panelPump.rotation.y=Math.PI*0.6; world.add(panelPump);
   colliders.push({x0:-7.3,x1:-4.7,z0:43.1,z1:44.9,y0:0,y1:2.6,walk:true});
@@ -6503,8 +6510,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 20;                 /* bump: build */
-  const AKVA_VERSION = '1.15.1';         /* bump: version */
+  const AKVA_BUILD = 21;                 /* bump: build */
+  const AKVA_VERSION = '1.15.2';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
