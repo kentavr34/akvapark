@@ -13,6 +13,8 @@ PORT=8090
 
 echo "==> каталоги"
 mkdir -p "$BASE"/{www,dist,logs}
+mkdir -p "$BASE/data/profiles"
+chown -R www-data:www-data "$BASE/data"
 
 echo "==> код игры из GitHub"
 if [ -d "$BASE/repo/.git" ]; then
@@ -41,6 +43,11 @@ install -m 644 "$BASE/repo/server/akvapark-update.service" /etc/systemd/system/a
 install -m 644 "$BASE/repo/server/akvapark-update.timer"   /etc/systemd/system/akvapark-update.timer
 systemctl daemon-reload
 systemctl enable --now akvapark-update.timer
+
+echo "==> API синхронизации профиля"
+install -m 644 "$BASE/repo/server/akvapark-api.service" /etc/systemd/system/akvapark-api.service
+systemctl daemon-reload
+systemctl enable --now akvapark-api.service
 
 echo "==> первая выкладка"
 "$BASE/repo/server/update.sh" || true

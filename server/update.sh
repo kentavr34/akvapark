@@ -82,3 +82,18 @@ rm -rf "$STAGE"
 
 chown -R www-data:www-data "$WWW" 2>/dev/null || true
 say "выложена сборка $JSON_BUILD (версия $JSON_VER)"
+
+# --- API синхронизации профиля: это не статика, а работающий процесс —
+# git reset --hard его не перезапустит сам. Перезапускаем, только если
+# код сервиса реально поменялся (не при каждой выкладке игры).
+API_SRC="$REPO/server/api/server.js"
+API_HASH_FILE="$BASE/.api.sha256"
+if [ -f "$API_SRC" ] && command -v sha256sum >/dev/null; then
+  NEW_HASH=$(sha256sum "$API_SRC" | cut -d' ' -f1)
+  OLD_HASH=$(cat "$API_HASH_FILE" 2>/dev/null || echo "")
+  if [ "$NEW_HASH" != "$OLD_HASH" ] && systemctl list-unit-files akvapark-api.service >/dev/null 2>&1; then
+    say "код API изменился — перезапускаю akvapark-api.service"
+    systemctl restart akvapark-api.service || true
+    echo "$NEW_HASH" > "$API_HASH_FILE"
+  fi
+fi
