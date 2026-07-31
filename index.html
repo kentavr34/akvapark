@@ -218,25 +218,25 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
    контента больше, чем помещается на невысоких телефонах, а центрирование
    переполненного flex-контейнера прячет И верх (обложку), И низ
    (последние кнопки) за края экрана одновременно. */
-#menu{justify-content:flex-start;padding-top:max(20px,env(safe-area-inset-top));
-  padding-bottom:30px}
+#menu{justify-content:flex-start;padding-top:max(14px,env(safe-area-inset-top));
+  padding-bottom:18px}
 .screen h1{font-size:clamp(26px,7vw,46px);font-weight:900;letter-spacing:1px;line-height:1.05;
   color:#d8f4ff;text-shadow:0 6px 30px rgba(0,140,200,.45);margin-bottom:8px}
 .screen h2{font-size:clamp(18px,5vw,28px);font-weight:800;margin-bottom:10px;color:#eaf8ff}
-.screen .tag{font-size:12px;letter-spacing:4px;color:#5fb6dd;text-transform:uppercase;margin-bottom:12px}
+.screen .tag{font-size:12px;letter-spacing:4px;color:#5fb6dd;text-transform:uppercase;margin-bottom:8px}
 .screen p{font-size:13px;line-height:1.6;color:#a8cfe4;max-width:440px;margin-bottom:20px;
   text-wrap:balance}
-.screen p.subtag{font-size:16.5px;color:#8fc4d6;max-width:290px;margin:0 auto 18px;line-height:1.4;text-wrap:balance}
-.coverWrap{position:relative;width:min(34vw,128px);margin-bottom:6px;line-height:0}
+.screen p.subtag{font-size:16.5px;color:#8fc4d6;max-width:290px;margin:0 auto 14px;line-height:1.35;text-wrap:balance}
+.coverWrap{position:relative;width:min(30vw,112px);margin-bottom:4px;line-height:0}
 .cover{width:100%;height:auto;border-radius:12px;display:block;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .coverWrap::after{content:'';position:absolute;inset:0;border-radius:12px;
   box-shadow:inset 0 -20px 22px -6px #03111c;pointer-events:none}
-.mbtn{width:min(78vw,290px);padding:14px;margin:6px 0;border-radius:11px;font-size:15px;font-weight:700;
+.mbtn{width:min(78vw,290px);padding:12px 14px;margin:4px 0;border-radius:11px;font-size:15px;font-weight:700;
   background:linear-gradient(180deg,rgba(70,190,240,.3),rgba(30,110,160,.35));
   border:1px solid rgba(140,230,255,.55);color:#eaf8ff;letter-spacing:.5px}
 .mbtn:active{background:rgba(90,210,255,.5)}
 .mbtn.ghost{background:rgba(255,255,255,.05);border-color:rgba(150,200,225,.3);font-size:13px;padding:11px}
-.mbtn:not(.ghost)+.mbtn.ghost{margin-top:16px}
+.mbtn:not(.ghost)+.mbtn.ghost{margin-top:14px}
 /* Прогресс: закрытая часть — тускло и с замком, пройденная — со звёздами.
    Ребёнку должно быть видно с одного взгляда, что открыто и за что боролся. */
 .mbtn.locked{background:rgba(255,255,255,.03);border-color:rgba(140,160,175,.22);
@@ -10242,8 +10242,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 29;                 /* bump: build */
-  const AKVA_VERSION = '1.19.4';         /* bump: version */
+  const AKVA_BUILD = 30;                 /* bump: build */
+  const AKVA_VERSION = '1.19.5';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
