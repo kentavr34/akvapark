@@ -26,4 +26,5 @@ desktop/dist-out/
 
 # локальный ключ генерации изображений (DashScope) — никогда не в git
 tools/.dashscope-key.local
+tools/.tripo-key.local
 tools/gen-out/
