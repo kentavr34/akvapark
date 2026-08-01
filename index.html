@@ -6755,15 +6755,27 @@ function movePlayer(dt,ix,iz){
   const dx=( ix*c + iz*s)*sp*dt;
   const dz=(-ix*s + iz*c)*sp*dt;
 
-  // движение по осям отдельно + шаг на невысокие уступы
+  // движение по осям отдельно + шаг на невысокие уступы (вверх и вниз —
+  // без спуска здесь каждая ступенька вниз давала короткое "проваливание":
+  // onGround=false на десяток кадров, пока гравитация не догонит новую высоту)
   const hh=P.hCur;
-  if(!blocked(P.pos.x+dx,P.pos.z,P.pos.y,hh)) P.pos.x+=dx;
-  else if(P.onGround && !blocked(P.pos.x+dx,P.pos.z,P.pos.y+0.42,hh)){
+  if(!blocked(P.pos.x+dx,P.pos.z,P.pos.y,hh)){
+    P.pos.x+=dx;
+    if(P.onGround){
+      const g=groundAt(P.pos.x,P.pos.z,P.pos.y);
+      if(g<P.pos.y && P.pos.y-g<=0.45) P.pos.y=g;
+    }
+  } else if(P.onGround && !blocked(P.pos.x+dx,P.pos.z,P.pos.y+0.42,hh)){
     const g=groundAt(P.pos.x+dx,P.pos.z,P.pos.y+0.42);
     if(g-P.pos.y<=0.45){ P.pos.x+=dx; P.pos.y=g; }
   }
-  if(!blocked(P.pos.x,P.pos.z+dz,P.pos.y,hh)) P.pos.z+=dz;
-  else if(P.onGround && !blocked(P.pos.x,P.pos.z+dz,P.pos.y+0.42,hh)){
+  if(!blocked(P.pos.x,P.pos.z+dz,P.pos.y,hh)){
+    P.pos.z+=dz;
+    if(P.onGround){
+      const g=groundAt(P.pos.x,P.pos.z,P.pos.y);
+      if(g<P.pos.y && P.pos.y-g<=0.45) P.pos.y=g;
+    }
+  } else if(P.onGround && !blocked(P.pos.x,P.pos.z+dz,P.pos.y+0.42,hh)){
     const g=groundAt(P.pos.x,P.pos.z+dz,P.pos.y+0.42);
     if(g-P.pos.y<=0.45){ P.pos.z+=dz; P.pos.y=g; }
   }
@@ -8207,6 +8219,16 @@ function updP2(dt){
     P2.shipYaw+=dY; P.yaw+=dY;
     const fx=-Math.sin(P2.shipYaw), fz=-Math.cos(P2.shipYaw);
     P2.shipPos.x+=fx*P2.spd*dt; P2.shipPos.z+=fz*P2.spd*dt;
+    // причал — жёсткая граница, катер не должен заезжать на сушу острова
+    {
+      const dxI=P2.shipPos.x-ISLAND.x, dzI=P2.shipPos.z-ISLAND.z;
+      const dI=Math.hypot(dxI,dzI), minD=ISLAND.r+7;
+      if(dI<minD){
+        const k=minD/Math.max(dI,0.001);
+        P2.shipPos.x=ISLAND.x+dxI*k; P2.shipPos.z=ISLAND.z+dzI*k;
+        if(P2.spd>0) P2.spd=0;
+      }
+    }
     shipObj.position.copy(P2.shipPos); shipObj.rotation.y=P2.shipYaw;
     shipObj.position.y=Math.sin(G.time*1.2)*0.18;
     wheelObj.rotation.z=(P2.inL?0.6:0)+(P2.inR?-0.6:0);
@@ -10251,8 +10273,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 33;                 /* bump: build */
-  const AKVA_VERSION = '1.22.0';         /* bump: version */
+  const AKVA_BUILD = 34;                 /* bump: build */
+  const AKVA_VERSION = '1.23.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
