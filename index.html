@@ -6492,7 +6492,8 @@ function buildLevel(){
   });
 
   /* ---------- КОРИДОР С ПРОВАЛОМ ---------- */
-  plane(0,41,12,14,0.02,M.floor);
+  plane(0,36.5,12,5,0.02,M.floor);    // до провала (сплошной пол закрывал воду — режем дырой)
+  plane(0,44.85,12,6.3,0.02,M.floor); // после провала
   plane(0,41,12,14,4,M.dark,Math.PI/2);
   wallZ(-6,34,48,0,4,M.wall2); wallZ(6,34,48,0,4,M.wall2);
   wallX(48,-18,-6,0,6,M.wall2); wallX(48,6,18,0,6,M.wall2);
@@ -6508,9 +6509,13 @@ function buildLevel(){
   zone(-6,6,42,48, 0,45, Math.PI, 'Коридор-2');
 
   /* ---------- ЗАТОПЛЕННЫЙ ЗАЛ ---------- */
-  plane(0,61,36,26,0.02,M.floor);
-  for(let i=0;i<22;i++) plane(rnd(-17,17),rnd(49,73),rnd(2,5),rnd(2,5),0.03,
-      Math.random()<0.5?M.tileBlue:M.tileWhite);
+  plane(0,52,36,8,0.02,M.floor);  // до канала (сплошной пол закрывал воду — режем дырой)
+  plane(0,69,36,10,0.02,M.floor); // после канала
+  for(let i=0;i<22;i++){
+    const zz=Math.random()<0.5?rnd(49,55):rnd(65,73); // не заходим на канал с водой (56-64)
+    plane(rnd(-17,17),zz,rnd(2,5),rnd(2,5),0.03,
+        Math.random()<0.5?M.tileBlue:M.tileWhite);
+  }
   plane(0,61,36,26,6,M.dark,Math.PI/2);
   wallZ(-18,48,74,0,6,M.wall); wallZ(18,48,74,0,6,M.wall);
   wallX(74,-18,18,0,6,M.wall,[-3,3]);
@@ -10246,8 +10251,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 32;                 /* bump: build */
-  const AKVA_VERSION = '1.21.0';         /* bump: version */
+  const AKVA_BUILD = 33;                 /* bump: build */
+  const AKVA_VERSION = '1.22.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
