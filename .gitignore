@@ -28,3 +28,12 @@ desktop/dist-out/
 tools/.dashscope-key.local
 tools/.tripo-key.local
 tools/gen-out/
+
+# локальный архив (не в GitHub)
+_archive/
+*.bak_*
+
+# копии из MAG — только локально (репозиторий публичный)
+research/from_mag/
+tools/from_mag/
+*.bak-*
