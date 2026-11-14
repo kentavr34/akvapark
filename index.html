@@ -418,7 +418,7 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
       <div class="btn sm pe" id="bLamp"><span class="ic">🔦</span>ФОНАРЬ</div>
       <div class="btn sm pe" id="bBag"><span class="ic">🎒</span>РЮКЗАК</div>
       <div class="btn sm pe" id="bCrouch"><span class="ic">⬇</span>СЕСТЬ</div>
-      <div class="btn key pe" id="bSword" style="display:none"><span class="ic">🗡</span>УДАР</div>
+      <div class="btn key pe" id="bSword" style="display:none"><span class="ic">📣</span>СВИСТ</div>
     </div>
     <div class="brow">
       <div class="btn pe" id="bRun"><span class="ic">⏩</span>БЕГ</div>
@@ -478,11 +478,11 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
     <div class="tag">Выбери часть</div>
     <h1>ЗАБРОШЕННЫЙ<br>АКВАПАРК</h1>
     <p class="subtag" id="subtag">Спаси тех, кто остался здесь один</p>
-    <div class="mbtn pe" id="bStart"><img class="chIco" src="./icons/ch/ch-entrance.png" alt=""><span class="mbtxt">ЧАСТЬ 1 — ВХОД В АКВАПАРК</span></div>
-    <div class="mbtn pe" id="bPart2"><img class="chIco" src="./icons/ch/ch-ocean.png" alt=""><span class="mbtxt">ЧАСТЬ 2 — ОКЕАН</span></div>
-    <div class="mbtn pe" id="bPart2b"><img class="chIco" src="./icons/ch/ch-rescue.png" alt=""><span class="mbtxt">ЧАСТЬ 2.2 — СПАСАТЕЛЬ</span></div>
-    <div class="mbtn pe" id="bPart3"><img class="chIco" src="./icons/ch/ch-heart.png" alt=""><span class="mbtxt">ЧАСТЬ 3 — СЕРДЦЕ ПАРКА</span></div>
-    <div class="mbtn pe" id="bPart4"><img class="chIco" src="./icons/ch/ch-island.png" alt=""><span class="mbtxt">ЧАСТЬ 4 — ОТКРЫТЫЙ ОСТРОВ</span></div>
+    <div class="mbtn pe" id="bStart"><img class="chIco" src="./icons/ch/ch-entrance.png" alt=""><span class="mbtxt">ГЛАВЫ 1–2 — ВХОД В АКВАПАРК</span></div>
+    <div class="mbtn pe" id="bPart2"><img class="chIco" src="./icons/ch/ch-ocean.png" alt=""><span class="mbtxt">ГЛАВА 3 — ОКЕАН</span></div>
+    <div class="mbtn pe" id="bPart2b"><img class="chIco" src="./icons/ch/ch-rescue.png" alt=""><span class="mbtxt">ГЛАВА 4 — СПАСАТЕЛЬ</span></div>
+    <div class="mbtn pe" id="bPart3"><img class="chIco" src="./icons/ch/ch-heart.png" alt=""><span class="mbtxt">ГЛАВА 5 — СЕРДЦЕ ПАРКА</span></div>
+    <div class="mbtn pe" id="bPart4"><img class="chIco" src="./icons/ch/ch-island.png" alt=""><span class="mbtxt">ГЛАВА 6 — ОТКРЫТЫЙ ОСТРОВ</span></div>
     <div class="mbtn ghost pe" id="bHow">УПРАВЛЕНИЕ</div>
     <div class="mbtn ghost pe" id="bGarage">🎨 ГАРАЖ</div>
     <a id="apkbtn" class="mbtn ghost pe" href="./akvapark.apk" style="display:none">СКАЧАТЬ ДЛЯ ANDROID</a>
@@ -491,8 +491,8 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
 
   <div id="welcomeCard" class="pe" style="display:none">
     <button id="welcomeClose" class="pe" aria-label="Закрыть">✕</button>
-    <p>Двадцать лет назад отсюда ушли последние люди. Вода зацвела, в бассейнах кто-то живёт, а свет давно погас.
-    Дойди до пульта и включи парк обратно.</p>
+    <p><b style="color:#ffd27a">СКОРО СНОС! Через 7 дней здесь будет ТЦ «Сливки».</b><br>
+    Этот парк строил твой дедушка-инженер. Теперь им хочет завладеть жадный Сливкин. Тебе 12, ты на всё лето приехал к деду. Ночью пробирайся в парк: там остались напуганные звери и пропавшая Капелька. Спаси их и включи парк обратно!</p>
   </div>
 
   <div id="howto" class="screen pe" style="display:none">
@@ -506,27 +506,27 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
       • <b>БЕГ</b> и <b>СЕСТЬ</b> — переключатели: нажал один раз — держится<br>
       • <b>ПРЫЖОК</b> — перепрыгнуть провал (нужен разбег бегом)<br>
       • <b>ВЗЯТЬ</b> — поднять предмет, открыть дверь, включить рубильник<br>
-      • <b>ФОНАРЬ</b> — светит и отпугивает зверей, садится батарея<br>
+      • <b>ФОНАРЬ</b> — светит, а звери света боятся; садится батарея<br>
       • Фонарь не лежит готовым: сначала найди деревянную рукоять, потом деталь с линзой, открой рюкзак и нажми «СОБРАТЬ»<br>
       • Внизу — <b>полоса предметов</b> как в майнкрафте. Нажал на клетку — предмет появился в левой руке. Нажал ещё раз или на пустую — предмет убран<br>
-      • В правой руке меч, а пока меча нет — просто рука<br>
+      • В правой руке свисток-хлопушка, а пока его нет — просто рука<br>
       <br><b style="color:#7fd8ff">Уровень 2</b><br>
       • Подойди к генератору и нажми <b>ВЗЯТЬ</b> — откроется щит<br>
       • Перетащи каждый провод в гнездо того же цвета (или нажми на провод, потом на гнездо)<br>
-      • Собрал щит — забери ключ и садись в машину<br>
+      • Собрал щит — забери ключ и садись в фургон<br>
       • Аптечку и батарейку применяй так: выбери в полосе, потом нажми <b>ВЗЯТЬ</b><br><br>
       <b style="color:#7fd8ff">Компьютер</b><br>
       WASD — идти, мышь — смотреть, Shift — бег, C — присесть,<br>
       Пробел — прыжок, E — взять, F — фонарь, B — рюкзак, Esc — пауза<br><br>
       <b style="color:#7fd8ff">Звери и солнце</b><br>
       • Утром на площади печёт: полоска «ПЕРЕГРЕВ» растёт на открытом месте. Уйди в тень (тёмные пятна на плитке) или внутрь здания — остынешь<br>
-      • Звери дикие, их не успокоить. Бей мечом кнопкой <b>УДАР</b> — зверя отбросит и оглушит секунд на пять<br>
-      • Пока оглушён — подойди и накрой сачком кнопкой <b>ВЗЯТЬ</b><br>
-      • Рубильник не включится, пока все трое не пойманы<br><br>
+      • Звери не злые, они просто напуганы: здесь давно никого не было. Свистни в свисток-хлопушку кнопкой <b>СВИСТ</b> — зверь замрёт секунд на пять<br>
+      • Пока зверь замер — подойди и накрой сачком кнопкой <b>ВЗЯТЬ</b><br>
+      • Рубильник не включится, пока все трое не спасены<br><br>
       <b style="color:#7fd8ff">Подсказки</b><br>
       • Герой говорит вслух всё, что написано в субтитрах. Выключить можно в паузе — «ГОЛОС ГЕРОЯ»<br>
       • Голубая стрелка сверху показывает направление к текущей задаче<br>
-      • В воду не заходить. Совсем.
+      • В воду без дела не лезь: Бульк вынесет тебя к берегу, но время потеряешь.
     </div>
     <div class="mbtn pe" id="bHowBack" style="margin-top:18px">НАЗАД</div>
   </div>
@@ -543,8 +543,8 @@ canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
   </div>
 
   <div id="death" class="screen pe">
-    <h2>ТЫ НЕ ВЫБРАЛСЯ</h2>
-    <p id="deathTxt">Вода в этом парке давно не для людей.</p>
+    <h2>ПОПРОБУЙ ЕЩЁ РАЗ</h2>
+    <p id="deathTxt">Ничего страшного. Передохни и попробуй ещё раз.</p>
     <div class="mbtn pe" id="bRespawn">ПРОДОЛЖИТЬ С ПОСЛЕДНЕЙ ТОЧКИ</div>
     <div class="mbtn ghost pe" id="bRestart2">НАЧАТЬ УРОВЕНЬ ЗАНОВО</div>
   </div>
@@ -4782,7 +4782,21 @@ function modelWood(){
   return g;
 }
 /* ---- МЕЧ: заострённый клинок, дол, гарда, оплётка, навершие ---- */
+/* ---- СВИСТОК ДЕДА (id предмета остался 'sword') ---- */
 function modelSword(){
+  const g=new THREE.Group();
+  const redM=new THREE.MeshLambertMaterial({color:0xd8322a});
+  const mouth=new THREE.Mesh(new THREE.CylinderGeometry(0.030,0.030,0.20,12),IM.steel);
+  mouth.position.y=0.02; g.add(mouth);
+  const cham=new THREE.Mesh(new THREE.CylinderGeometry(0.062,0.062,0.15,14),IM.brass);
+  cham.rotation.x=Math.PI/2; cham.position.y=0.17; g.add(cham);
+  const slot=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.03,0.07),IM.steelD);
+  slot.position.set(0,0.235,0); g.add(slot);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.036,0.008,6,12),redM);
+  ring.position.y=-0.09; g.add(ring);
+  return g;
+}
+function modelSwordLegacy(){
   const g=new THREE.Group();
   const sh=new THREE.Shape();
   sh.moveTo(-0.030,0);      sh.lineTo(0.030,0);
@@ -6576,8 +6590,8 @@ function buildLevel(){
     if(G.power) return;
     if(G.caught<G.beastTotal){
       SND.lock();
-      toast('Защита не даст питание: по парку носятся звери ('+G.caught+'/'+G.beastTotal+')');
-      say('Пока они тут бегают, щит не включится.');
+      toast('Рубильник не идёт: на кабелях выдры ('+G.caught+'/'+G.beastTotal+' спасено)');
+      say('Пока выдры грызут кабели, щит не включится.');
       return;
     }
     G.power=true; lever.rotation.x=1.2; SND.power();
@@ -6601,12 +6615,12 @@ function buildLevel(){
     onTake(){ nextTask(4); }});
   addPickup(21,0.7,28,'item',{id:'plank',name:'Доска',ico:'🟫',halo:0.8,
     onTake(){ say('Тяжёлая. Но через воду хватит.'); }});
-  addPickup(-9.2,0.75,-6.5,'item',{id:'sword',name:'Старый меч',ico:'🗡',halo:0.5,tilt:1.35,
+  addPickup(-9.2,0.75,-6.5,'item',{id:'sword',name:'Свисток-хлопушка',ico:'📣',halo:0.5,tilt:1.35,
     onTake(){ $('bSword').style.display='flex';
-      say('Ржавый, щербатый. Но зверю хватит.');
-      toast('Кнопка УДАР появилась справа'); }});
+      say('Свисток-хлопушка! Зверь замрёт, а я его не обижу.');
+      toast('Кнопка СВИСТ появилась справа'); }});
   addPickup(-28,0.85,26.5,'item',{id:'net',name:'Сачок для бассейна',ico:'🥅',halo:0.7,
-    onTake(){ say('Сачок. Оглушу зверя — накрою.'); }});
+    onTake(){ say('Сачок. Свистну — зверь замрёт, тогда накрою.'); }});
   addPickup(-24,0.6,17,'item',{id:'battery',name:'Батарейка',ico:'🔋',halo:0.3});
   addPickup(-27,1.35,22,'item',{id:'medkit',name:'Аптечка',ico:'🧰',halo:0.35});
   addPickup(12,0.6,31,'item',{id:'medkit',name:'Аптечка',ico:'🧰',halo:0.35});
@@ -6637,14 +6651,14 @@ const TASKS=[
   'Перепрыгнуть провал в полу',
   'Перекинуть доску через канал',
   'Открыть дверь машинного зала',
-  'Поймать всех зверей сачком',
-  'Включить главный рубильник'
+  'Накрыть сачком всех трёх выдр',
+  'Включить щит (рубильник)'
 ];
 const TASKS2=[
   'Осмотреть генератор',
-  'Соединить провода на щите',
-  'Забрать ключ от машины',
-  'Завести машину'
+  'Включить ток: соединить провода на щите',
+  'Забрать ключ от фургона',
+  'Завести фургон «Атолл»'
 ];
 function initTasks(list){ G.tasks=(list||TASKS).map(t=>({t,done:false})); G.taskIdx=0; renderTasks(); }
 function nextTask(i){
@@ -6714,7 +6728,7 @@ function updHeat(dt){
   const bar=$('heatBar');
   if(hot){
     G.heat+=dt*3.2;
-    if(G.heat>=100){ G.heat=100; damage(dt*26,'Солнце в этом парке жарит насмерть. Надо было уйти в тень.'); }
+    if(G.heat>=100){ G.heat=100; damage(dt*26,'Стало слишком жарко. Дедушка говорил: в тени лучше. Попробуй ещё раз.'); }
     else if(G.heat>55&&!G._heatWarn){ G._heatWarn=true; SND.heat();
       say('Печёт. Надо уйти в тень или внутрь.'); }
   } else {
@@ -6803,7 +6817,7 @@ function movePlayer(dt,ix,iz){
       DETAIL.splash(P.pos.x,w.surface,P.pos.z,1.0); }
     else if(Math.random()<dt*3) DETAIL.splash(P.pos.x,w.surface,P.pos.z,0.28);
     P.drown+=dt;
-    damage(dt*70,'В воде что-то большое. И оно быстрее тебя.');
+    damage(dt*70,'Бульк вынес тебя к берегу. Попробуй ещё раз.');
   } else P.drown=0;
 
   // чекпойнты
@@ -6836,7 +6850,7 @@ function flash(){ const d=$('dmgflash'); d.style.opacity=0.9; setTimeout(()=>d.s
 
 function die(txt){
   G.dead=true; G.mode='dead'; SND.hurt(); voiceStop();
-  $('deathTxt').textContent=txt||'Аквапарк не любит гостей.';
+  $('deathTxt').textContent=txt||'Ничего страшного. Передохни и попробуй ещё раз.';
   $('death').style.display='flex';
 }
 function respawn(){
@@ -6852,17 +6866,17 @@ function respawn(){
    СУЩЕСТВА
    ========================================================================== */
 const BEAST_CFG=[
- {id:'dog',name:'Одичавшая собака',color:0x4a3d33,dark:0x2c2520,eye:0xffdd55,
+ {id:'dog',name:'Выдра у холла',color:0x6b4a32,dark:0x3e2a1c,eye:0xfff0c8,
   bw:0.50,bh:0.50,bl:1.15,legL:0.42,y:0.60,rad:0.55,
   spPatrol:1.6,spChase:4.3,dmg:14,
   area:[-14.5,14.5,11.5,33],start:[-11,29],
   path:[[-11,29],[11,29],[12,14],[-12,14],[-13,24]]},
- {id:'boar',name:'Дикий кабан',color:0x4b3f36,dark:0x231d19,eye:0xff8855,
+ {id:'boar',name:'Выдра у лагуны',color:0x7a5638,dark:0x44301f,eye:0xfff0c8,
   bw:0.74,bh:0.64,bl:1.30,legL:0.34,y:0.62,rad:0.72,
   spPatrol:1.4,spChase:4.5,dmg:18,
   area:[-16,16,48.5,55],start:[-12,50.5],
   path:[[-12,50.5],[12,50.5],[13,54],[-13,54]]},
- {id:'varan',name:'Варан',color:0x3f5a3c,dark:0x22301f,eye:0xffe066,
+ {id:'varan',name:'Выдра на лотке',color:0x5e4230,dark:0x35251a,eye:0xfff0c8,
   bw:0.62,bh:0.34,bl:1.55,legL:0.24,y:0.34,rad:0.62,
   spPatrol:1.9,spChase:4.0,dmg:12,
   area:[-16,16,65,73],start:[-12,67],
@@ -6982,7 +6996,7 @@ function updBeasts(dt){
     } else if(inArea && dist<13){
       b.state='chase'; sp=G.crouch?c.spChase*0.6:c.spChase; tx=pp.x; tz=pp.z;
       b.growl-=dt; if(b.growl<=0){ b.growl=rnd(1.8,3.6); SND.growl(); }
-      if(!G._seen){ G._seen=1; say(hasItem('sword')?'Она меня заметила. Ну давай.':'Она меня заметила! Нечем отбиваться.'); }
+      if(!G._seen){ G._seen=1; say(hasItem('sword')?'Зверёк испугался. Свистну — он замрёт.':'Зверёк испугался меня! Нужен свисток.'); }
     } else {
       b.state='patrol';
       const w=b.cfg.path[b.wp]; tx=w[0]; tz=w[1];
@@ -7007,7 +7021,7 @@ function updBeasts(dt){
       // укус — только с откатом, потом зверь отскакивает
       if(b.bite<=0 && b.state==='chase'){
         b.bite=1.8; b.recoil=1.1;
-        damage(c.dmg, c.name+' достала первой.');
+        damage(c.dmg, 'Зверёк испугался и шмыгнул прочь. Передохни и попробуй ещё раз.');
         P.pos.x+=dx/dist*1.1; P.pos.z+=dz/dist*1.1;
       }
     }
@@ -7068,7 +7082,7 @@ function updGuardians(dt){
     } else if(inArea && dist<13){
       b.state='chase'; sp=G.crouch?c.spChase*0.6:c.spChase; tx=pp.x; tz=pp.z;
       b.growl-=dt; if(b.growl<=0){ b.growl=rnd(1.8,3.6); SND.growl(); }
-      if(!G._seenGuardian){ G._seenGuardian=1; say('Оно меня заметило. Бежать!'); }
+      if(!G._seenGuardian){ G._seenGuardian=1; say('Шуршун! «Мусор обнаружен!» Прячься!'); }
     } else {
       b.state='patrol';
       const w=c.path[b.wp]; tx=w[0]; tz=w[1];
@@ -7091,7 +7105,7 @@ function updGuardians(dt){
       b.pos.x-=dx*push*0.25; b.pos.z-=dz*push*0.25;
       if(b.bite<=0 && b.state==='chase'){
         b.bite=1.8; b.recoil=1.1;
-        damage(c.dmg, c.name+' догнал в темноте.');
+        damage(c.dmg, c.name+' подобрал тебя как мусор и выплюнул у бака. Попробуй ещё раз.');
         P.pos.x+=dx/dist*1.1; P.pos.z+=dz/dist*1.1;
       }
     }
@@ -7125,8 +7139,8 @@ function swordSwing(){
       b.pos.x=clamp(b.pos.x,b.cfg.area[0],b.cfg.area[1]);
       b.pos.z=clamp(b.pos.z,b.cfg.area[2],b.cfg.area[3]);
       hit=true;
-      toast(hasItem('net')?(b.cfg.name+' оглушена — лови сачком!')
-                          :(b.cfg.name+' отброшена. Нужен сачок, чтобы поймать.'));
+      toast(hasItem('net')?'Зверёк замер — накрывай сачком!'
+                          :'Зверёк замер. Нужен сачок, чтобы помочь.');
     }
     if(hit) SND.hit();
   },130);
@@ -7143,13 +7157,13 @@ function nearestStunned(){
 function catchBeast(b){
   b.state='caught'; b.mesh.visible=false;
   G.caught++; G.coins+=10; SND.net();
-  toast('Поймано: '+b.cfg.name+'  (+10 монет)');
+  toast('Спасено: '+b.cfg.name+'  (+10 монет)');
   renderTasks(); updHUD();
   if(b.onCaught) b.onCaught(b);
   // «Все трое в сачке» — реплика для сюжетных троек уровня 1; для побочных
   // спасений (addRescueBeast) свою реакцию задают через onCaught.
   if(G.level===1 && G.caught>=G.beastTotal){
-    nextTask(8); say('Все трое в сачке. Теперь можно и щит включать.');
+    nextTask(8); say('Все трое. Теперь щит.');
   }
 }
 
@@ -7257,7 +7271,7 @@ function say(txt){
 }
 function setBtn(id,on){ $(id).classList.toggle('on',!!on); }
 
-const ITEM_ICO={lamp:'🔦',lamphead:'💡',wood:'🪵',sword:'🗡',net:'🥅',
+const ITEM_ICO={lamp:'🔦',lamphead:'💡',wood:'🪵',sword:'📣',net:'🥅',
   crowbar:'🪓',keycard:'🪪',plank:'🟫',battery:'🔋',medkit:'🧰'};
 function renderBag(){
   const s=$('slots'); let h='';
@@ -7411,7 +7425,7 @@ function closeShop(){ $('shopPanel').style.display='none'; }
 function renderGarage(){
   $('garageBank').textContent='Монет: '+PROGRESS.bank();
   const l=$('garageList'); l.innerHTML='';
-  const cats=[['lamp','ЦВЕТ ФОНАРЯ'],['jacket','ЦВЕТ КУРТКИ'],['kart','ЦВЕТ БАГГИ (ЧАСТЬ 4)']];
+  const cats=[['lamp','ЦВЕТ ФОНАРЯ'],['jacket','ЦВЕТ КУРТКИ'],['kart','ЦВЕТ БАГГИ (ГЛАВА 6)']];
   for(const [cat,title] of cats){
     const h=document.createElement('div'); h.className='garCat'; h.textContent=title; l.appendChild(h);
     for(const it of COSMETIC_ITEMS.filter(i=>i.cat===cat)){
@@ -7662,7 +7676,7 @@ function doUse(){
   if(G.level===4){
     if(P4.scene==='dive'){ const sh=nearStunShark();
       if(sh){ catchShark4(sh); return; }
-      toast('Сначала оглуши акулу кнопкой УДАР'); return; }
+      toast('Сначала свистни кнопкой СВИСТ — акула замрёт'); return; }
     if(P4.scene==='fix'&&P4.nearGen&&!P4.fixed){ openWirePuzzle(FIX_WIRE); return; }
     if(P4.scene==='sleep'&&P4.nearBed){
       SND.win();
@@ -7672,11 +7686,11 @@ function doUse(){
         $('ui').classList.add('cine');
         const st=PROGRESS.complete('p2b',{seconds:G.time,parTime:360});
         PROGRESS.addCoins(45);
-        showCard({tag:'Заброшенный аквапарк 2',sub:'ВТОРОЙ УРОВЕНЬ ПРОЙДЕН',
-          stats:'<div class="statline">Спасено животных: <b>3 акулы и 16 рыб</b></div>'+
-                '<div class="statline">Монет от врача: <b>45</b></div>'+
+        showCard({tag:'Заброшенный аквапарк 2',sub:'ГЛАВА 4 ПРОЙДЕНА',
+          stats:'<div class="statline">Акулы дома: <b>3 из 3</b></div>'+
+                '<div class="statline">Монет в копилку от ветеринара: <b>45</b></div>'+
                 '<div class="statline">Звёзд за уровень: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
-                '<div class="statline">Дальше — скоро новая часть</div>',
+                '<div class="statline">Дальше — Сердце парка. Скоро.</div>',
           btn:'В МЕНЮ',fn:()=>{ hideCard(); backToMenu(); }});
       },2400);
       return;
@@ -7747,10 +7761,10 @@ function buildLevel2(){
   carObj.rotation.y=Math.PI; world.add(carObj);
   colliders.push({x0:CAR_POS.x-1.1,x1:CAR_POS.x+1.1,z0:CAR_POS.z-2.3,z1:CAR_POS.z+2.3,
                   y0:0,y1:1.8,walk:true});
-  sign(CAR_POS.x,2.7,CAR_POS.z,2.6,0.6,'МАШИНА','#2a1010','#ffb0a0',0);
-  addInter(CAR_POS.x-1.6,1.1,CAR_POS.z-0.4,2.6,'Машина',()=>{
-    if(!hasItem('carkey')){ SND.lock(); toast('Заперта. Нужен ключ зажигания.');
-      say('Без ключа никуда.'); return; }
+  sign(CAR_POS.x,2.7,CAR_POS.z,2.6,0.6,'ФУРГОН «АТОЛЛ»','#2a1010','#ffb0a0',0);
+  addInter(CAR_POS.x-1.6,1.1,CAR_POS.z-0.4,2.6,'Фургон',()=>{
+    if(!hasItem('carkey')){ SND.lock(); toast('Заперт. Нужен ключ зажигания.');
+      say('Нужен ключ. И ток.'); return; }
     takeItem('carkey'); nextTask(3); startDrive();
   });
   // ----- ГЕНЕРАТОР (справа) -----
@@ -7797,7 +7811,7 @@ const ISLAND={x:-152,z:-62,r:26};
 let shipObj=null, wheelObj=null, islandObj=null, slideObj=null, heliObj=null, crashCar=null;
 let fishes=[], sharks=[], jellies=[];
 const TASKS3=[
-  'Понять, что делать с машиной',
+  'Понять, как добраться до острова',
   'Прыгнуть с обрыва в океан',
   'Доплыть до корабля',
   'Встать за штурвал',
@@ -8161,7 +8175,7 @@ function startFinal(){
   SND.drive(false);
   P.pos.set(2,8.2,-14); P.yaw=Math.PI; P.pitch=0;
   heliObj.visible=true; heliObj.position.set(2,60,-6);
-  say('Опять эта дорога. Машина где-то далеко позади.');
+  say('Дороги дальше нет. Только океан.');
 }
 
 /* ---- каждый кадр части 2 ---- */
@@ -8171,9 +8185,9 @@ function updP2(dt){
 
   if(ph==='road'){
     if(!P2.said.hello&&P2.t>1.2){ P2.said.hello=1;
-      say('И что делать? Кажется, машина сломалась. Надо думать.'); }
+      say('Фургон разбит. Что же делать? Надо думать.'); }
     if(!P2.said.sea&&P2.t>7){ P2.said.sea=1; nextTask(0);
-      say('За перилами океан. И, кажется, там корабль.'); }
+      say('Вон корабль! И остров. Нам туда.'); }
     const near=Math.abs(P.pos.x+7.6)<3.4 && Math.abs(P.pos.z)<6 && P.pos.y>7;
     bigBtn(near?'ПРЫГНУТЬ':null, startFall);
     return;
@@ -8251,7 +8265,7 @@ function updP2(dt){
       if(L>55){ $('heatveil').style.opacity=Math.min(0.7,(L-55)/8).toFixed(2);
         P.yaw+=Math.sin(G.time*7)*0.012; }
       if(L>63){ $('heatveil').style.opacity=0;
-        die('Слишком долго один посреди океана. Герой не выдержал.'); }
+        die('Бульк вынес тебя к кругу. Попробуй ещё раз.'); }
     }
     return;
   }
@@ -8300,10 +8314,10 @@ function updP2(dt){
           $('ui').classList.remove('cine');
           const st=PROGRESS.complete('p2',{seconds:G.time,parTime:240});
           PROGRESS.addCoins(25);
-          showCard({tag:'Заброшенный аквапарк 2',sub:'ПЕРВЫЙ УРОВЕНЬ ПРОЙДЕН',
-            stats:'<div class="statline">Звёзд за уровень: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
-                  '<div class="statline">Дальше — второй уровень</div>',
-            btn:'УРОВЕНЬ 2',fn:()=>{ hideCard(); $('ui').classList.remove('cine');
+          showCard({tag:'Заброшенный аквапарк 2',sub:'ГЛАВА 3 ПРОЙДЕНА',
+            stats:'<div class="statline">Звёзд за главу: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
+                  '<div class="statline">Дальше — Спасатель</div>',
+            btn:'ГЛАВА 4',fn:()=>{ hideCard(); $('ui').classList.remove('cine');
               setTimeout(()=>startLevel(4),700); }});
         },1400);
       });
@@ -8317,7 +8331,7 @@ function updSwim(dt){
   // воздух
   const under=P.pos.y<-0.4;
   if(under){ P2.air-=dt*2.6;
-    if(P2.air<=0){ P2.air=0; damage(dt*22,'Не хватило воздуха.'); }
+    if(P2.air<=0){ P2.air=0; damage(dt*22,'Бульк вынес тебя к кругу. Попробуй ещё раз.'); }
     else if(P2.air<30&&!P2.said.air){ P2.said.air=1; say('Воздух кончается! Надо наверх.'); }
   } else { P2.air=Math.min(100,P2.air+dt*45); if(P2.air>60) P2.said.air=0; }
   $('airFill').style.width=P2.air+'%';
@@ -8355,7 +8369,7 @@ function updSwim(dt){
     if(j.sting>0) j.sting-=dt;
     const d=Math.hypot(j.x-P.pos.x,j.y-P.pos.y,j.z-P.pos.z);
     if(d<1.5&&j.sting<=0){
-      j.sting=2.6; damage(8,'Медузы обожгли.');
+      j.sting=2.6; damage(8,'Медузы смешно защекотали. Попробуй ещё раз.');
       P2.air=Math.max(0,P2.air-9); SND.hurt();
       say('Ай! Медуза!');
       const a=Math.atan2(P.pos.x-j.x,P.pos.z-j.z);
@@ -8379,7 +8393,7 @@ function updSwim(dt){
     sh.m.rotation.y=Math.atan2(dx,dz)+Math.PI;
     sh.m.rotation.x=-Math.asin(clamp(dy/len,-1,1))*0.6;
     if(d<2.2&&sh.bite<=0){
-      sh.bite=2.8; damage(14,'Акула добралась.'); SND.growl();
+      sh.bite=2.8; damage(14,'Акула-нянька шлёпнула хвостом. Попробуй ещё раз.'); SND.growl();
       const a=Math.atan2(P.pos.x-sh.pos.x,P.pos.z-sh.pos.z);
       P.pos.x+=Math.sin(a)*2.2; P.pos.z+=Math.cos(a)*2.2;
     }
@@ -8403,8 +8417,8 @@ const TASKS4=[
   'Поймать трёх акул',
   'Отдать акул спасателю',
   'Долететь до города',
-  'Дойти до больницы',
-  'Отдать животных врачу',
+  'Дойти до ветлечебницы',
+  'Отдать животных ветеринару',
   'Вернуть животных в аквапарк',
   'Починить генератор',
   'Лечь спать в раздевалке'
@@ -8649,7 +8663,7 @@ function buildCity(){
   cr1.position.set(0,9,49.7); world.add(cr1);
   const cr2=new THREE.Mesh(new THREE.BoxGeometry(1.6,6,0.3),new THREE.MeshLambertMaterial({color:0xd8322a}));
   cr2.position.set(0,9,49.7); world.add(cr2);
-  sign(0,6.4,49.6,9,1.4,'БОЛЬНИЦА','#f2f6f8','#c02a20',Math.PI);
+  sign(0,6.4,49.6,9,1.4,'ВЕТЛЕЧЕБНИЦА','#f2f6f8','#c02a20',Math.PI);
   // приёмный зал
   plane(0,60,25,19,0.03,new THREE.MeshLambertMaterial({color:0xe8eef0}));
   plane(0,60,25,19,6,new THREE.MeshLambertMaterial({color:0xd8e2e6},Math.PI/2));
@@ -8751,7 +8765,7 @@ function updSharks4(dt){
     sh.m.position.copy(sh.pos);
     sh.m.rotation.y=Math.atan2(dx,dz)+Math.PI;
     if(d<2.4&&sh.bite<=0){
-      sh.bite=2.8; damage(12,'Акула цапнула.'); SND.growl();
+      sh.bite=2.8; damage(12,'Акула-нянька шлёпнула хвостом. Попробуй ещё раз.'); SND.growl();
       const a=Math.atan2(pp.x-sh.pos.x,pp.z-sh.pos.z);
       P.pos.x+=Math.sin(a)*2.2; P.pos.z+=Math.cos(a)*2.2;
     }
@@ -8769,7 +8783,7 @@ function hitShark4(){
     if((fx*dx+fz*dz)/h<0.2) continue;
     sh.state='stun'; sh.stun=6; hit=true;
     sh.pos.x+=dx/d*2.2; sh.pos.z+=dz/d*2.2;
-    toast('Акула оглушена — лови сачком!');
+    toast('Акула замерла — накрывай сачком!');
   }
   if(hit) SND.hit();
   return hit;
@@ -8782,9 +8796,9 @@ function nearStunShark(){
 }
 function catchShark4(sh){
   sh.state='caught'; sh.m.visible=false; P4.caught++;
-  SND.net(); toast('Поймана акула '+P4.caught+' из 3');
+  SND.net(); toast('Акула-нянька в безопасности: '+P4.caught+' из 3');
   renderTasks();
-  if(P4.caught>=3){ nextTask(3); say('Все трое в сачке. Наверх!'); }
+  if(P4.caught>=3){ nextTask(3); say('Все трое. Наверх!'); }
 }
 
 /* ---- главный шагомер уровня ---- */
@@ -8798,7 +8812,7 @@ function updP4(dt){
         {who:'other',t:'Ну наконец-то. Я уже думал, ты потерялся.'},
         {who:'me',t:'Ну... да. Почти.'},
         {who:'other',t:'Двери закрыл. Животные, которых ты выловил сачком, — они с тобой?'},
-        {who:'me',t:'Да. Мы же за этим и ехали. В больницу их везли.'},
+        {who:'me',t:'Да. Мы же за этим и ехали. К ветеринару их везли.'},
         {who:'me',t:'Только камня на дороге я не ждал. Кислорода в баке было мало, но хватило.'},
         {who:'other',t:'Тогда летим обратно в аквапарк. Заберём остальных.'}
       ],()=>{ nextTask(0); bigBtn('ЛЕТИМ',()=>{ bigBtn(null); nextTask(1);
@@ -8832,10 +8846,10 @@ function updP4(dt){
         P4.hasMask=true; P4.hasNet=true;
         giveItem('mask','Маска','🤿',true);
         giveItem('net','Сачок для бассейна','🥅',true);
-        giveItem('sword','Старый меч','🗡',true);
+        giveItem('sword','Свисток-хлопушка','📣',true);
         $('bSword').style.display='flex';
         nextTask(2);
-        toast('Получены: маска, сачок и меч');
+        toast('Получены: маска, сачок и свисток-хлопушка');
         say('Две минуты — и я внизу.');
         P4.timer=120; P4.scene='dive'; P4.said={};
         spawnPoolSharks();
@@ -8850,7 +8864,7 @@ function updP4(dt){
   if(sc==='dive'){
     P4.timer-=dt;
     $('airFill').style.width=Math.max(0,P4.timer/120*100)+'%';
-    if(P4.timer<=0){ die('Две минуты вышли. Кислород кончился.'); return; }
+    if(P4.timer<=0){ die('Две минуты вышли. Марина подняла тебя наверх. Попробуй ещё раз.'); return; }
     if(P4.timer<30&&!P4.said.t30){ P4.said.t30=1; say('Полминуты! Быстрее!'); }
     // плаваем
     const s=Math.sin(P.yaw), c=Math.cos(P.yaw);
@@ -8880,7 +8894,7 @@ function updP4(dt){
     if(!P4.said.g1&&P4.t>0.6){ P4.said.g1=1;
       dialog([
         {who:'me',t:'Все трое здесь. Живые.'},
-        {who:'other',t:'Отлично. Теперь — в больницу. Бегом к вертолёту.'}
+        {who:'other',t:'Отлично. Теперь — в ветлечебницу. Бегом к вертолёту.'}
       ],()=>{ nextTask(4); bigBtn('К ВЕРТОЛЁТУ',()=>{ bigBtn(null); nextTask(5);
         fly('Вау. Вот это город.',()=>scene4('city')); }); });
     }
@@ -8889,13 +8903,13 @@ function updP4(dt){
 
   if(sc==='city'){
     if(!P4.said.c1&&P4.t>1.2){ P4.said.c1=1; say('Настоящие дома. Настоящие люди где-то тут.'); }
-    if(P.pos.z>46&&!P4.said.c2){ P4.said.c2=1; nextTask(6); say('Больница. Пришли.'); }
+    if(P.pos.z>46&&!P4.said.c2){ P4.said.c2=1; nextTask(6); say('Ветлечебница. Пришли.'); }
     const atDoc=P.pos.z>63&&Math.abs(P.pos.x)<6;
     if(atDoc&&!DLG.on&&!P4.said.c3){
       P4.said.c3=1;
       dialog([
         {who:'me',t:'Здравствуйте. Мы их из аквапарка привезли. Всех.'},
-        {who:'other',t:'Оставляйте. Полечим. Садитесь пока на скамейку.'}
+        {who:'other',t:'Я ветеринар. Оставляйте, осмотрю. Садитесь пока на скамейку.'}
       ],()=>{ nextTask(7); bigBtn('СЕСТЬ И ЖДАТЬ',()=>{
         bigBtn(null);
         const d=$('dmgflash'); d.style.background='#000'; d.style.opacity=1;
@@ -8903,7 +8917,7 @@ function updP4(dt){
           d.style.opacity=0; d.style.background='';
           G.coins+=45; updHUD(); SND.coin();
           dialog([
-            {who:'other',t:'Всё. Здоровы. Держите их обратно.'},
+            {who:'other',t:'Всё. Здоровы и выспались. Держите их обратно.'},
             {who:'other',t:'И вот, мелочь моя. Спасибо вам.'},
             {who:'me',t:'Спасибо. Мы их домой отвезём.'}
           ],()=>{ bigBtn('В ВЕРТОЛЁТ',()=>{ bigBtn(null); nextTask(8);
@@ -9224,9 +9238,9 @@ const GEN_WIRE=makeWirePuzzle({
     ambLight.intensity=0.9;
     say('Пошло питание. Где-то звенит по всему двору.');
     keyPick=addPickup(KEY_POS[0],1.05,KEY_POS[1],'item',
-      {id:'carkey',name:'Ключ от машины',ico:'🔑',halo:0.44,scale:1.25,tilt:0.5,
-       onTake(){ nextTask(2); say('Ключ. Теперь к машине.'); }});
-    toast('Из щита выпал ключ от машины');
+      {id:'carkey',name:'Ключ от фургона',ico:'🔑',halo:0.44,scale:1.25,tilt:0.5,
+       onTake(){ nextTask(2); say('Ключ. Теперь к фургону.'); }});
+    toast('Замок ключницы открылся: ключ от фургона');
   }
 });
 const FIX_WIRE=makeWirePuzzle({
@@ -9287,9 +9301,9 @@ function updDrive(dt){
     if(dashObj.userData.needle) dashObj.userData.needle.rotation.z=-CUT.speed/46*2.2;
   }
   if(CUT.dist>55) once('fast',()=>{ $('brakeWrap').style.display='block';
-    say('Что-то она сама разгоняется.'); });
-  if(CUT.dist>150) once('nobrake',()=>{ say('Тормозов нет!'); });
-  if(CUT.dist>200) once('rock',()=>{ say('Камень!'); });
+    say('Ржавые диски… Только бы доехать!'); });
+  if(CUT.dist>150) once('nobrake',()=>{ say('Педаль отвалилась!'); });
+  if(CUT.dist>200) once('rock',()=>{ say('Обрыв!'); });
 
   // тряска
   if(CUT.shake>0){ CUT.shake-=dt; }
@@ -9312,11 +9326,11 @@ function updDrive(dt){
       const ratio=G.coinsTotal>0?G.coins/G.coinsTotal:undefined;
       const st=PROGRESS.complete('p1',{coinsRatio:ratio,seconds:G.time,parTime:300});
       PROGRESS.addCoins(20);
-      showCard({tag:'Заброшенный аквапарк',sub:'ЧАСТЬ 1 ПРОЙДЕНА',
+      showCard({tag:'Заброшенный аквапарк',sub:'ГЛАВА 2 ПРОЙДЕНА',
         stats:'<div class="statline">Монет всего: <b>'+G.coins+'</b></div>'+
-              '<div class="statline">Тормоз нажат: <b>'+CUT.braked+' раз</b></div>'+
-              '<div class="statline">Звёзд за часть: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>',
-        btn:'ЧАСТЬ 2', fn:()=>{ hideCard(); $('ui').classList.remove('cine');
+              '<div class="statline">Звёзд за главу: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
+              '<div class="statline">Дальше — остров. Дедушка ждёт по рации.</div>',
+        btn:'ГЛАВА 3', fn:()=>{ hideCard(); $('ui').classList.remove('cine');
           setTimeout(()=>startLevel(3),700); }});
     },1500);
   }
@@ -9324,7 +9338,7 @@ function updDrive(dt){
 function pressBrake(){
   if(!CUT.on) return;
   CUT.braked++; CUT.shake=0.35; SND.pedal();
-  toast(CUT.braked<3?'Педаль в пол. Ничего.':'Не работает!');
+  toast(CUT.braked<3?'Педаль в пол. Тормоза не слушаются.':'Тормоза не слушаются!');
 }
 
 /* ---------------- ЗАСТАВКИ ---------------- */
@@ -9378,11 +9392,11 @@ function renderMenu(){
       el.innerHTML=ico+'<span class="mbtxt">'+label+(n>0?'<span class="stars">'+stxt(n)+'</span>':'')+'</span>';
     }
   };
-  draw('bStart','p1','ЧАСТЬ 1 — ВХОД В АКВАПАРК','ch-entrance');
-  draw('bPart2','p2','ЧАСТЬ 2 — ОКЕАН','ch-ocean');
-  draw('bPart2b','p2b','ЧАСТЬ 2.2 — СПАСАТЕЛЬ','ch-rescue');
-  draw('bPart3','p3','ЧАСТЬ 3 — СЕРДЦЕ ПАРКА','ch-heart');
-  draw('bPart4','p4a','ЧАСТЬ 4 — ОТКРЫТЫЙ ОСТРОВ','ch-island');
+  draw('bStart','p1','ГЛАВЫ 1–2 — ВХОД В АКВАПАРК','ch-entrance');
+  draw('bPart2','p2','ГЛАВА 3 — ОКЕАН','ch-ocean');
+  draw('bPart2b','p2b','ГЛАВА 4 — СПАСАТЕЛЬ','ch-rescue');
+  draw('bPart3','p3','ГЛАВА 5 — СЕРДЦЕ ПАРКА','ch-heart');
+  draw('bPart4','p4a','ГЛАВА 6 — ОТКРЫТЫЙ ОСТРОВ','ch-island');
 }
 
 /* стрелка-указатель к текущей задаче */
@@ -9441,7 +9455,7 @@ function minimapPlot(ctx,cx,cy,scale,dx,dz,color,size,shape){
     ctx.beginPath(); ctx.arc(x,y,size/2,0,6.29); ctx.fill();
   }
 }
-const PORTAL_LABELS=['ЧАСТЬ 1 — ВХОД','ЧАСТЬ 2 — ОКЕАН','СПАСАТЕЛЬ','МЕХАНИЧЕСКОЕ СЕРДЦЕ'];
+const PORTAL_LABELS=['ГЛАВЫ 1–2 — ВХОД','ГЛАВА 3 — ОКЕАН','СПАСАТЕЛЬ','МЕХАНИЧЕСКОЕ СЕРДЦЕ'];
 const REPAIR_LABELS=['Щит освещения','Щит вентиляции','Щит насосной','Уличный фонарь','Насос полива','Громкая связь'];
 function updMinimap(){
   const wrap=$('minimap');
@@ -9600,9 +9614,9 @@ function buildLevel5(){
 
   // ---- жетоны персонала: короткий лор без кат-сцен ----
   addLoreToken(-1.3,1.0,-3.5,{id:'l5_note1',name:'Записка у люка',
-    text:'«Спускаюсь проверить щит. Если не вернусь за час — зовите смену.» Не вернулся.'});
+    text:'«Спускаюсь проверить щит. Если не вернусь за час — зовите смену.» Дальше страница оторвана.'});
   addLoreToken(-13,1.0,15,{id:'l5_note2',name:'Жетон электрика',
-    text:'Именной жетон. На обратной стороне нацарапано: «Оно ходит по коридору. Не одно я его слышал.»'});
+    text:'Именной жетон. На обратной стороне нацарапано: «По коридору кто-то шуршит щётками. Он всё убирает».'});
   addLoreToken(13,1.0,29,{id:'l5_note3',name:'Вахтенный журнал',
     text:'Последняя запись обрывается на полуслове.'});
   addLoreToken(4,1.0,56,{id:'l5_note4',name:'Фото со смены',
@@ -9610,7 +9624,7 @@ function buildLevel5(){
 
   // ---- сторож: патрулирует коридор, гнаться может и в комнаты ----
   spawnGuardian({
-    name:'Обходчик', start:[0,20], path:[[0,4],[0,20],[0,38],[0,20]],
+    name:'Шуршун', start:[0,20], path:[[0,4],[0,20],[0,38],[0,20]],
     area:[-15,15,0,40], dmg:16
   });
 }
@@ -9640,10 +9654,11 @@ function finishLevel5(){
     nextTask(2);
     const st=PROGRESS.complete('p3',{seconds:G.time,parTime:420});
     PROGRESS.addCoins(35);
-    showCard({tag:'Заброшенный аквапарк',sub:'ЧАСТЬ 3 ПРОЙДЕНА',
-      stats:'<div class="statline">Найдено жетонов: <b>'+PROGRESS.loreFound().length+'</b></div>'+
-            '<div class="statline">Звёзд за часть: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
-            '<div class="statline">Дальше — открытый парк. Скоро.</div>',
+    showCard({tag:'Заброшенный аквапарк',sub:'ГЛАВА 5 ПРОЙДЕНА',
+      stats:'<div class="statline">Парк включён: <b>2 из 6</b></div>'+
+            '<div class="statline">Найдено жетонов: <b>'+PROGRESS.loreFound().length+'</b></div>'+
+            '<div class="statline">Звёзд за главу: <b>'+'★'.repeat(st)+'☆'.repeat(3-st)+'</b></div>'+
+            '<div class="statline">Дальше — остров. Марина прилетит на вертолёте.</div>',
       btn:'В МЕНЮ', fn:()=>{ hideCard(); $('ui').classList.remove('cine'); backToMenu(); }});
   },1800);
 }
@@ -9656,7 +9671,7 @@ function finishLevel5(){
    безопаснее для пяти уже проверенных уровней и реалистичнее по объёму
    работы). Побочных квестов здесь ещё нет — это часть A, квесты в части B.
    ========================================================================== */
-const TASKS6=['Прокатиться на багги по острову'];
+const TASKS6=['Включить парк обратно: прокатиться на багги по острову'];
 
 /* ---- багги: тот же джойстик, что и ходьба (joyX — руль, joyZ — газ/тормоз) ---- */
 const KART={inCar:false, pos:new THREE.Vector3(0,0,0), yaw:0, speed:0};
@@ -9681,7 +9696,7 @@ function enterKart(){
   KART.pos.set(kartObj.position.x,0,kartObj.position.z);
   bigBtn('ВЫЙТИ ИЗ БАГГИ',exitKart);
   nextTask(0);
-  say('Заводится с полпинка. Двадцать лет простоя — и хоть бы что.');
+  say('Заводится с полпинка. Дедушка бы одобрил.');
 }
 function exitKart(){
   if(!KART.inCar) return;
@@ -9748,8 +9763,8 @@ function buildLevel6(){
   addInter(0,1.0,10.6,2.4,'Сесть в багги',()=>enterKart());
 
   // ---- четыре портала в уже пройденные главы ----
-  addPortal(0,-38,'ЧАСТЬ 1 — ВХОД','p1',1);
-  addPortal(38,0,'ЧАСТЬ 2 — ОКЕАН','p2',3);
+  addPortal(0,-38,'ГЛАВЫ 1–2 — ВХОД','p1',1);
+  addPortal(38,0,'ГЛАВА 3 — ОКЕАН','p2',3);
   addPortal(0,38,'СПАСАТЕЛЬ','p2b',4);
   addPortal(-38,0,'МЕХАНИЧЕСКОЕ СЕРДЦЕ','p3',5);
 
@@ -9770,10 +9785,10 @@ function buildLevel6(){
 function buildHubQuestsWave1(){
   // ---- спасение: одичавшие питомцы, потеряшки — тон мягче, чем в актах 0/3 ----
   const petSpots=[
-    {name:'Заблудившийся щенок', start:[16,16], color:0x8a6a45, dark:0x5c4529, eye:0xffcf7a},
-    {name:'Дикая коза',          start:[-16,16], color:0x9a9186, dark:0x625b52, eye:0xffe066},
+    {name:'Потерявшийся кролик', start:[16,16], color:0xd8d2c6, dark:0xa89f90, eye:0xffcf7a},
+    {name:'Упрямая коза',        start:[-16,16], color:0x9a9186, dark:0x625b52, eye:0xffe066},
     {name:'Ручной енот',         start:[16,-16], color:0x556058, dark:0x2e352f, eye:0xbfe066},
-    {name:'Пугливый лис',        start:[-16,-16], color:0xb3612f, dark:0x6e3a1c, eye:0xffcf7a},
+    {name:'Пугливый хорёк',      start:[-16,-16], color:0x8c6a4a, dark:0x5a4230, eye:0xffcf7a},
     {name:'Отбившийся котёнок',  start:[0,-22], color:0xc8c0a8, dark:0x8a8270, eye:0x7ee0ff}
   ];
   for(const p of petSpots){
@@ -9805,7 +9820,7 @@ function buildHubQuestsWave1(){
   addLoreToken(21,1.0,21,{id:'l6_note3',name:'Детский рисунок',
     text:'Кривой аквапарк на альбомном листе. Внизу подпись: «Мы ещё вернёмся».'});
   addLoreToken(-21,1.0,-21,{id:'l6_note4',name:'Записка смотрителя',
-    text:'«Пока горит хоть один фонарь — это ещё не конец». Похоже, он оказался прав.'});
+    text:'«Пока горит хоть один фонарь — это ещё не конец». Похоже, смотритель был прав.'});
 }
 
 /* ==========================================================================
@@ -9819,30 +9834,30 @@ function buildHubQuestsWave2(){
   addFetchQuest({
     id:'l6_keeper_lantern',
     npcPos:[28,-20], npcYaw:Math.PI*0.25,
-    npcOpt:{shirt:0x4a6a52, pants:0x33424a, hair:0xcfd3d6, skin:0xd8a06a},
-    npcLabel:'Поговорить со смотрителем',
+    npcOpt:{shirt:0x2fa85a, pants:0xe8c23a, hair:0xe03a2a, skin:0xd8a06a},
+    npcLabel:'Поговорить с Жорой',
     itemPos:[34,0.85,-26], itemId:'oldlantern', itemName:'Старый фонарь', itemIco:'🏮',
     reward:25,
     askLines:[
-      {who:'other',t:'О, живая душа! Думал, тут кроме чаек никого не осталось.'},
-      {who:'me',t:'Здравствуйте. Вы тут совсем один?'},
-      {who:'other',t:'Присматриваю за парком, что от него осталось. Слушай, будь другом...'},
-      {who:'other',t:'Обронил свой старый фонарь у скал, там, где раньше рыбачил. Скучно без него по вечерам.'},
+      {who:'other',t:'Привет! Привет! Кр-р! Гость!'},
+      {who:'me',t:'Ой, попугай. И говорящий!'},
+      {who:'other',t:'Жора! Я Жора! Кр-р! Фонарь смотрителя пропал!'},
+      {who:'other',t:'У скал, у скал! Старый фонарь! Принеси, принеси!'},
       {who:'me',t:'Схожу поищу, раз тут недалеко.'}
     ],
     hint:'Отметил на карте: фонарь смотрителя у скал',
     reminderLines:[
-      {who:'other',t:'Ну как, не видать фонаря? Он у скал, я хорошо помню то место.'}
+      {who:'other',t:'Ну как, нашёл фонарь? У скал, у скал! Кр-р!'}
     ],
-    pickupToast:'Нашёлся! Отнеси смотрителю',
+    pickupToast:'Нашёлся! Отнеси Жоре',
     giveLines:[
       {who:'me',t:'Вот, нашёл у скал!'},
-      {who:'other',t:'Дай-ка... Он самый. Столько лет вместе, думал — всё, потерялся.'},
-      {who:'other',t:'Держи вот, тебе пригодится больше, чем мне.'}
+      {who:'other',t:'Тёплый! Тёплый! Кр-р! Хозяин жив, хозяин где-то рядом!'},
+      {who:'other',t:'Держи монетки, держи! Спасибо!'}
     ],
-    doneToast:'Смотритель рад — +25 монет в копилку',
+    doneToast:'Жора рад — +25 монет в копилку',
     afterLines:[
-      {who:'other',t:'Спасибо ещё раз за фонарь. Заходи, если что.'}
+      {who:'other',t:'Фонарь! Фонарь! Заходи, заходи, кр-р!'}
     ]
   });
 }
@@ -9860,11 +9875,11 @@ function winLevel(){
   $('ui').classList.add('cine');
   showCard({
     tag:'Заброшенный аквапарк',
-    sub:'УРОВЕНЬ 1 ПРОЙДЕН',
+    sub:'ГЛАВА 1 ПРОЙДЕНА',
     stats:'<div class="statline">Монет собрано: <b>'+G.coins+'</b> из '+G.coinsTotal+'</div>'+
           '<div class="statline">Время: <b>'+mins+':'+String(secs).padStart(2,'0')+'</b></div>'+
-          '<div class="statline">Зверей поймано: <b>'+G.caught+' из '+G.beastTotal+'</b></div>',
-    btn:'УРОВЕНЬ 2',
+          '<div class="statline">Выдры дома: <b>'+G.caught+' из '+G.beastTotal+'</b></div>',
+    btn:'ГЛАВА 2',
     fn:()=>{ hideCard(); $('ui').classList.remove('cine'); setTimeout(()=>startLevel(2),700); }
   });
 }
@@ -9988,10 +10003,16 @@ function startLevel(n){
   updateHands(); renderHotbar();
   SND.init(); SND.ambient(true);
   if(G.level===1){
-    say('Двадцать лет тут никого. Кроме тех, кто остался в воде.');
+    say('Семь дней?! Надо успеть!');
+    setTimeout(()=>{ if(G.mode==='play'&&G.level===1) toast('СКОРО СНОС! Через 7 дней здесь будет ТЦ «Сливки»'); },900);
     if(IS_TOUCH){ showWalkHint(); setTimeout(()=>toast('Слева — ходьба, справа — камера'),3400); }
   } else if(G.level===2){
-    say('Дверь за спиной закрылась. Машина и генератор — больше тут ничего.');
+    say('Дед (рация): «…Атолл, кто на связи? Приём».');
+  } else if(G.level===5){
+    say('Дед (рация): «Три щита. В любом порядке. Рубильник — в конце».');
+  } else if(G.level===6){
+    say('Привет! Привет! Кр-р! Гость!');
+    setTimeout(()=>{ if(G.mode==='play'&&G.level===6) toast('СНОС ЧЕРЕЗ 5 ДНЕЙ. ООО «Сливкин-Девелопмент»'); },1200);
   }
 }
 
@@ -10273,8 +10294,8 @@ requestAnimationFrame(frame);
    ========================================================================== */
 'use strict';
 (function(){
-  const AKVA_BUILD = 34;                 /* bump: build */
-  const AKVA_VERSION = '1.23.0';         /* bump: version */
+  const AKVA_BUILD = 35;                 /* bump: build */
+  const AKVA_VERSION = '1.24.0';         /* bump: version */
   const POLL_MS = 90000;
   const isWeb = location.protocol === 'http:' || location.protocol === 'https:';
 
